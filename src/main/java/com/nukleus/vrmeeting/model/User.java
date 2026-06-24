@@ -32,6 +32,9 @@ public class User {
     @Column(length = 2000)
     private String runningGlbUrl;
 
+    @Column(length = 2000)
+    private String idleGlbUrl;
+
     private String avatarStatus;
 
     private String meshyTaskId;
@@ -61,6 +64,14 @@ public class User {
 
     public String getPassword() {
         return password;
+    }
+
+    public String getIdleGlbUrl() {
+        return idleGlbUrl;
+    }
+
+    public void setIdleGlbUrl(String idleGlbUrl) {
+        this.idleGlbUrl = idleGlbUrl;
     }
 
     public void setPassword(String password) {

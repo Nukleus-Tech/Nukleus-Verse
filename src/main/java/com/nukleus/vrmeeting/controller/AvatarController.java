@@ -41,6 +41,8 @@ public class AvatarController {
         user.setRunningGlbUrl(avatarData.getRunningGlbUrl());
         user.setAvatarStatus(avatarData.getAvatarStatus());
         user.setMeshyTaskId(avatarData.getMeshyTaskId());
+        user.setIdleGlbUrl(avatarData.getIdleGlbUrl());
+        
 
         userRepository.save(user);
 
@@ -79,6 +81,7 @@ public Map<String, Object> getAvatarByEmail(@RequestParam String email) {
     response.put("runningGlbUrl", user.getRunningGlbUrl());
     response.put("avatarStatus", user.getAvatarStatus());
     response.put("meshyTaskId", user.getMeshyTaskId());
+    response.put("idleGlbUrl", user.getIdleGlbUrl());
 
     return response;
 }
