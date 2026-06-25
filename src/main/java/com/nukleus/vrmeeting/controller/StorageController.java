@@ -67,4 +67,47 @@ public class StorageController {
             );
         }
     }
+    @PostMapping("/archive-remote-file")
+public Map<String, Object> archiveRemoteFile(@RequestBody Map<String, String> body) {
+    try {
+        String remoteUrl = body.get("remoteUrl");
+        String fileName = body.get("fileName");
+
+        if (remoteUrl == null || remoteUrl.isEmpty()) {
+            return Map.of("success", false, "message", "remoteUrl is required");
+        }
+
+        if (fileName == null || fileName.isEmpty()) {
+            fileName = UUID.randomUUID() + ".glb";
+        }
+
+        // java.net.URL url = new java.net.URL(remoteUrl);
+        java.net.URI uri = java.net.URI.create(remoteUrl);
+        java.net.URL url = uri.toURL();
+
+         byte[] fileBytes = url.openStream().readAllBytes();
+        // byte[] fileBytes = url.openStream().readAllBytes();
+
+        String objectName = "avatars/glb/" + UUID.randomUUID() + "_" + fileName;
+
+        BlobInfo blobInfo = BlobInfo.newBuilder(bucketName, objectName)
+                .setContentType("model/gltf-binary")
+                .build();
+
+        storage.create(blobInfo, fileBytes);
+
+        String publicUrl = "https://storage.googleapis.com/" + bucketName + "/" + objectName;
+
+        return Map.of(
+                "success", true,
+                "url", publicUrl
+        );
+
+    } catch (Exception e) {
+        return Map.of(
+                "success", false,
+                "message", e.getMessage()
+        );
+    }
+}
 }
