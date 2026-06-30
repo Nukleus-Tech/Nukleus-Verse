@@ -31,11 +31,17 @@ public class AvatarController {
         User user = userRepository.findByEmailIgnoreCase(email);
 
         if (user == null) {
-    user = new User();
-    user.setEmail(email);
-    user.setName(avatarData.getName());
-    user.setPassword(avatarData.getPassword());
-      }
+            user = new User();
+            user.setEmail(email);
+        }
+
+        if (avatarData.getName() != null && !avatarData.getName().trim().isEmpty()) {
+            user.setName(avatarData.getName().trim());
+        }
+
+        if (avatarData.getPassword() != null && !avatarData.getPassword().trim().isEmpty()) {
+            user.setPassword(avatarData.getPassword().trim());
+        }
 
         user.setImageUrl(avatarData.getImageUrl());
         user.setAvatarUrl(avatarData.getAvatarUrl());
@@ -46,12 +52,13 @@ public class AvatarController {
         user.setAvatarStatus(avatarData.getAvatarStatus());
         user.setMeshyTaskId(avatarData.getMeshyTaskId());
 
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
 
         response.put("success", true);
         response.put("message", "Avatar data saved successfully");
-        response.put("email", user.getEmail());
-        response.put("avatarStatus", user.getAvatarStatus());
+        response.put("email", savedUser.getEmail());
+        response.put("name", savedUser.getName());
+        response.put("avatarStatus", savedUser.getAvatarStatus());
 
         return response;
     }
@@ -79,6 +86,7 @@ public class AvatarController {
 
         response.put("success", true);
         response.put("email", user.getEmail());
+        response.put("name", user.getName());
         response.put("imageUrl", user.getImageUrl());
         response.put("avatarUrl", user.getAvatarUrl());
         response.put("riggedGlbUrl", user.getRiggedGlbUrl());
