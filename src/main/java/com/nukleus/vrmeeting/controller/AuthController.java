@@ -4,11 +4,11 @@ import com.nukleus.vrmeeting.model.User;
 import com.nukleus.vrmeeting.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-
 public class AuthController {
 
     @Autowired
@@ -30,7 +30,11 @@ public class AuthController {
             return Map.of("success", false, "message", "Email is required");
         }
 
-        if (!isValidEmail(user.getEmail())) {
+        String email = user.getEmail().trim().toLowerCase();
+        user.setEmail(email);
+        user.setName(user.getName().trim());
+
+        if (!isValidEmail(email)) {
             return Map.of("success", false, "message", "Invalid email format");
         }
 
@@ -38,7 +42,9 @@ public class AuthController {
             return Map.of("success", false, "message", "Password is required");
         }
 
-        if (userRepository.findByEmail(user.getEmail()) != null) {
+        user.setPassword(user.getPassword().trim());
+
+        if (userRepository.findByEmailIgnoreCase(email) != null) {
             return Map.of("success", false, "message", "Email already exists");
         }
 
@@ -60,7 +66,9 @@ public class AuthController {
             return Map.of("success", false, "message", "Email is required");
         }
 
-        if (!isValidEmail(loginUser.getEmail())) {
+        String email = loginUser.getEmail().trim().toLowerCase();
+
+        if (!isValidEmail(email)) {
             return Map.of("success", false, "message", "Invalid email format");
         }
 
@@ -68,13 +76,15 @@ public class AuthController {
             return Map.of("success", false, "message", "Password is required");
         }
 
-        User dbUser = userRepository.findByEmail(loginUser.getEmail());
+        String password = loginUser.getPassword().trim();
+
+        User dbUser = userRepository.findByEmailIgnoreCase(email);
 
         if (dbUser == null) {
             return Map.of("success", false, "message", "User not found");
         }
 
-        if (!dbUser.getPassword().equals(loginUser.getPassword())) {
+        if (!dbUser.getPassword().equals(password)) {
             return Map.of("success", false, "message", "Wrong password");
         }
 

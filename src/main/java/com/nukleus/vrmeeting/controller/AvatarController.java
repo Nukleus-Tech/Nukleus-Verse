@@ -4,12 +4,12 @@ import com.nukleus.vrmeeting.model.User;
 import com.nukleus.vrmeeting.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/avatar")
-
 public class AvatarController {
 
     @Autowired
@@ -26,23 +26,25 @@ public class AvatarController {
             return response;
         }
 
-        User user = userRepository.findByEmail(avatarData.getEmail().trim().toLowerCase());
+        String email = avatarData.getEmail().trim().toLowerCase();
+
+        User user = userRepository.findByEmailIgnoreCase(email);
 
         if (user == null) {
-            response.put("success", false);
-            response.put("message", "User not found");
-            return response;
-        }
+    user = new User();
+    user.setEmail(email);
+    user.setName(avatarData.getName());
+    user.setPassword(avatarData.getPassword());
+      }
 
         user.setImageUrl(avatarData.getImageUrl());
         user.setAvatarUrl(avatarData.getAvatarUrl());
         user.setRiggedGlbUrl(avatarData.getRiggedGlbUrl());
         user.setWalkingGlbUrl(avatarData.getWalkingGlbUrl());
         user.setRunningGlbUrl(avatarData.getRunningGlbUrl());
+        user.setIdleGlbUrl(avatarData.getIdleGlbUrl());
         user.setAvatarStatus(avatarData.getAvatarStatus());
         user.setMeshyTaskId(avatarData.getMeshyTaskId());
-        user.setIdleGlbUrl(avatarData.getIdleGlbUrl());
-        
 
         userRepository.save(user);
 
@@ -53,36 +55,39 @@ public class AvatarController {
 
         return response;
     }
-   @GetMapping("/by-email")
-public Map<String, Object> getAvatarByEmail(@RequestParam String email) {
 
-    Map<String, Object> response = new HashMap<>();
+    @GetMapping("/by-email")
+    public Map<String, Object> getAvatarByEmail(@RequestParam String email) {
 
-    if (email == null || email.trim().isEmpty()) {
-        response.put("success", false);
-        response.put("message", "Email is required");
+        Map<String, Object> response = new HashMap<>();
+
+        if (email == null || email.trim().isEmpty()) {
+            response.put("success", false);
+            response.put("message", "Email is required");
+            return response;
+        }
+
+        email = email.trim().toLowerCase();
+
+        User user = userRepository.findByEmailIgnoreCase(email);
+
+        if (user == null) {
+            response.put("success", false);
+            response.put("message", "User not found for email: " + email);
+            return response;
+        }
+
+        response.put("success", true);
+        response.put("email", user.getEmail());
+        response.put("imageUrl", user.getImageUrl());
+        response.put("avatarUrl", user.getAvatarUrl());
+        response.put("riggedGlbUrl", user.getRiggedGlbUrl());
+        response.put("walkingGlbUrl", user.getWalkingGlbUrl());
+        response.put("runningGlbUrl", user.getRunningGlbUrl());
+        response.put("idleGlbUrl", user.getIdleGlbUrl());
+        response.put("avatarStatus", user.getAvatarStatus());
+        response.put("meshyTaskId", user.getMeshyTaskId());
+
         return response;
     }
-
-    User user = userRepository.findByEmail(email.trim().toLowerCase());
-
-    if (user == null) {
-        response.put("success", false);
-        response.put("message", "User not found");
-        return response;
-    }
-
-    response.put("success", true);
-    response.put("email", user.getEmail());
-    response.put("imageUrl", user.getImageUrl());
-    response.put("avatarUrl", user.getAvatarUrl());
-    response.put("riggedGlbUrl", user.getRiggedGlbUrl());
-    response.put("walkingGlbUrl", user.getWalkingGlbUrl());
-    response.put("runningGlbUrl", user.getRunningGlbUrl());
-    response.put("avatarStatus", user.getAvatarStatus());
-    response.put("meshyTaskId", user.getMeshyTaskId());
-    response.put("idleGlbUrl", user.getIdleGlbUrl());
-
-    return response;
-}
 }
