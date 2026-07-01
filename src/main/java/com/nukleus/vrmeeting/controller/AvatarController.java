@@ -47,7 +47,7 @@ public class AvatarController {
         user.setAvatarUrl(avatarData.getAvatarUrl());
         user.setRiggedGlbUrl(avatarData.getRiggedGlbUrl());
         user.setWalkingGlbUrl(avatarData.getWalkingGlbUrl());
-        user.setRunningGlbUrl(avatarData.getRunningGlbUrl());
+        // user.setRunningGlbUrl(avatarData.getRunningGlbUrl());
         user.setIdleGlbUrl(avatarData.getIdleGlbUrl());
         user.setAvatarStatus(avatarData.getAvatarStatus());
         user.setMeshyTaskId(avatarData.getMeshyTaskId());
@@ -91,7 +91,7 @@ public class AvatarController {
         response.put("avatarUrl", user.getAvatarUrl());
         response.put("riggedGlbUrl", user.getRiggedGlbUrl());
         response.put("walkingGlbUrl", user.getWalkingGlbUrl());
-        response.put("runningGlbUrl", user.getRunningGlbUrl());
+        // response.put("runningGlbUrl", user.getRunningGlbUrl());
         response.put("idleGlbUrl", user.getIdleGlbUrl());
         response.put("avatarStatus", user.getAvatarStatus());
         response.put("meshyTaskId", user.getMeshyTaskId());

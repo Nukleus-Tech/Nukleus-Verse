@@ -29,8 +29,8 @@ public class User {
     @Column(length = 2000)
     private String walkingGlbUrl;
 
-    @Column(length = 2000)
-    private String runningGlbUrl;
+    // @Column(length = 2000)
+    // private String runningGlbUrl;
 
     @Column(length = 2000)
     private String idleGlbUrl;
@@ -110,13 +110,7 @@ public class User {
         this.walkingGlbUrl = walkingGlbUrl;
     }
 
-    public String getRunningGlbUrl() {
-        return runningGlbUrl;
-    }
-
-    public void setRunningGlbUrl(String runningGlbUrl) {
-        this.runningGlbUrl = runningGlbUrl;
-    }
+    
 
     public String getAvatarStatus() {
         return avatarStatus;

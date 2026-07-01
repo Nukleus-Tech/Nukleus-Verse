@@ -16,7 +16,7 @@ public class AuthController {
 
     private boolean isValidEmail(String email) {
         return email != null &&
-                email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+              email.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
     }
 
     @PostMapping("/register")
