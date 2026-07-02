@@ -23,6 +23,21 @@ public class Meeting {
     @Column(nullable = false)
     private String status = "ACTIVE";
 
+    // NEW FIELD
+    private String meetingName;
+
+    @Column(length = 2000)
+    private String recordingUrl;
+
+    @Column(length = 2000)
+    private String pdfUrl;
+
+    @Column(length = 2000)
+    private String notesUrl;
+
+    @Column(length = 2000)
+    private String pptUrl;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime endedAt;
@@ -64,6 +79,46 @@ public class Meeting {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getMeetingName() {
+        return meetingName;
+    }
+
+    public void setMeetingName(String meetingName) {
+        this.meetingName = meetingName;
+    }
+
+    public String getRecordingUrl() {
+        return recordingUrl;
+    }
+
+    public void setRecordingUrl(String recordingUrl) {
+        this.recordingUrl = recordingUrl;
+    }
+
+    public String getPdfUrl() {
+        return pdfUrl;
+    }
+
+    public void setPdfUrl(String pdfUrl) {
+        this.pdfUrl = pdfUrl;
+    }
+
+    public String getNotesUrl() {
+        return notesUrl;
+    }
+
+    public void setNotesUrl(String notesUrl) {
+        this.notesUrl = notesUrl;
+    }
+
+    public String getPptUrl() {
+        return pptUrl;
+    }
+
+    public void setPptUrl(String pptUrl) {
+        this.pptUrl = pptUrl;
     }
 
     public LocalDateTime getCreatedAt() {

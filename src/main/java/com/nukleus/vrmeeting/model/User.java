@@ -29,15 +29,16 @@ public class User {
     @Column(length = 2000)
     private String walkingGlbUrl;
 
-    // @Column(length = 2000)
-    // private String runningGlbUrl;
-
     @Column(length = 2000)
     private String idleGlbUrl;
 
     private String avatarStatus;
 
     private String meshyTaskId;
+
+    // NEW FIELD
+    @Column(length = 100)
+    private String currentMeetingId;
 
     public User() {
     }
@@ -110,8 +111,6 @@ public class User {
         this.walkingGlbUrl = walkingGlbUrl;
     }
 
-    
-
     public String getAvatarStatus() {
         return avatarStatus;
     }
@@ -126,5 +125,15 @@ public class User {
 
     public void setMeshyTaskId(String meshyTaskId) {
         this.meshyTaskId = meshyTaskId;
+    }
+
+    // NEW GETTER & SETTER
+
+    public String getCurrentMeetingId() {
+        return currentMeetingId;
+    }
+
+    public void setCurrentMeetingId(String currentMeetingId) {
+        this.currentMeetingId = currentMeetingId;
     }
 }
