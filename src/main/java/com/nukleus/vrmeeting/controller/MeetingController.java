@@ -125,5 +125,54 @@ public Map<String, Object> joinMeeting(@RequestBody Map<String, String> request)
             "userEmail", user.getEmail(),
             "status", meeting.getStatus()
     );
+ }
+ @PostMapping("/end")
+public Map<String, Object> endMeeting(@RequestBody Meeting request) {
+
+    if (request.getMeetingId() == null || request.getMeetingId().trim().isEmpty()) {
+        return Map.of("success", false, "message", "Meeting ID is required");
+    }
+
+    String meetingId = request.getMeetingId().trim();
+
+    Meeting meeting = meetingRepository.findByMeetingId(meetingId);
+
+    if (meeting == null) {
+        return Map.of("success", false, "message", "Meeting not found");
+    }
+
+    meeting.setStatus("ENDED");
+    meeting.setEndedAt(LocalDateTime.now());
+
+    if (request.getRecordingUrl() != null) {
+        meeting.setRecordingUrl(request.getRecordingUrl());
+    }
+
+    if (request.getPdfUrl() != null) {
+        meeting.setPdfUrl(request.getPdfUrl());
+    }
+
+    if (request.getNotesUrl() != null) {
+        meeting.setNotesUrl(request.getNotesUrl());
+    }
+
+    if (request.getPptUrl() != null) {
+        meeting.setPptUrl(request.getPptUrl());
+    }
+
+    meetingRepository.save(meeting);
+
+    return Map.of(
+            "success", true,
+            "message", "Meeting ended successfully",
+            "meetingId", meeting.getMeetingId(),
+            "roomCode", meeting.getRoomCode(),
+            "hostEmail", meeting.getHostEmail(),
+            "status", meeting.getStatus(),
+            "recordingUrl", meeting.getRecordingUrl(),
+            "pdfUrl", meeting.getPdfUrl(),
+            "notesUrl", meeting.getNotesUrl(),
+            "pptUrl", meeting.getPptUrl()
+    );
 }
 }
