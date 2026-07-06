@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/meeting")
@@ -70,7 +72,6 @@ public class MeetingController {
         userRepository.save(hostUser);
 
         Map<String, Object> response = new HashMap<>();
-
         response.put("success", true);
         response.put("message", "Meeting created successfully");
         response.put("meetingId", meeting.getMeetingId());
@@ -119,7 +120,6 @@ public class MeetingController {
         userRepository.save(user);
 
         Map<String, Object> response = new HashMap<>();
-
         response.put("success", true);
         response.put("message", "Meeting joined successfully");
         response.put("meetingId", meeting.getMeetingId());
@@ -165,16 +165,26 @@ public class MeetingController {
             meeting.setPptUrl(request.getPptUrl());
         }
 
+        List<User> meetingUsers = userRepository.findByCurrentMeetingId(meetingId);
+
+        String participantEmails = meetingUsers.stream()
+                .map(User::getEmail)
+                .filter(email -> email != null && !email.trim().isEmpty())
+                .distinct()
+                .collect(Collectors.joining(","));
+
+        meeting.setParticipantEmails(participantEmails);
+
         meetingRepository.save(meeting);
 
         Map<String, Object> response = new HashMap<>();
-
         response.put("success", true);
         response.put("message", "Meeting ended successfully");
         response.put("meetingId", meeting.getMeetingId());
         response.put("roomCode", meeting.getRoomCode());
         response.put("hostEmail", meeting.getHostEmail());
         response.put("meetingName", meeting.getMeetingName());
+        response.put("participantEmails", meeting.getParticipantEmails());
         response.put("status", meeting.getStatus());
         response.put("recordingUrl", meeting.getRecordingUrl());
         response.put("pdfUrl", meeting.getPdfUrl());

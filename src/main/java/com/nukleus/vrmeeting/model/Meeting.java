@@ -23,7 +23,6 @@ public class Meeting {
     @Column(nullable = false)
     private String status = "ACTIVE";
 
-    // NEW FIELD
     private String meetingName;
 
     @Column(length = 2000)
@@ -37,6 +36,9 @@ public class Meeting {
 
     @Column(length = 2000)
     private String pptUrl;
+
+    @Column(length = 10000)
+    private String participantEmails;
 
     private LocalDateTime createdAt;
 
@@ -119,6 +121,14 @@ public class Meeting {
 
     public void setPptUrl(String pptUrl) {
         this.pptUrl = pptUrl;
+    }
+
+    public String getParticipantEmails() {
+        return participantEmails;
+    }
+
+    public void setParticipantEmails(String participantEmails) {
+        this.participantEmails = participantEmails;
     }
 
     public LocalDateTime getCreatedAt() {
