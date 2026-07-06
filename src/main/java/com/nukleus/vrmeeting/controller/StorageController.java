@@ -39,7 +39,9 @@ public class StorageController {
             }
 
             String safeType = fileType.trim().toLowerCase();
-            String folder = "meetings/" + meetingId.trim() + "/" + safeType + "/";
+            String safeMeetingFolder = "meeting-id-" + meetingId.trim();
+
+String folder = "meetings/" + safeMeetingFolder + "/" + safeType + "/";
 
             return uploadToGcs(file, folder, "Meeting file uploaded successfully");
 
@@ -114,7 +116,7 @@ public class StorageController {
 
             byte[] fileBytes = url.openStream().readAllBytes();
 
-            String objectName = "avatars/glb/" + UUID.randomUUID() + "_" + fileName;
+            String objectName = "images/glb/" + UUID.randomUUID() + "_" + fileName;
 
             BlobInfo blobInfo = BlobInfo.newBuilder(bucketName, objectName)
                     .setContentType("model/gltf-binary")
