@@ -20,7 +20,7 @@ public class StorageController {
 
     @PostMapping("/upload-image")
     public Map<String, Object> uploadImage(@RequestParam("file") MultipartFile file) {
-        return uploadToGcs(file, "avatars/", "Image uploaded successfully");
+        return uploadToGcs(file, "images/", "Image uploaded successfully");
     }
 
     @PostMapping("/upload-meeting-file")
@@ -41,7 +41,7 @@ public class StorageController {
             String safeType = fileType.trim().toLowerCase();
             String safeMeetingFolder = "meeting-id-" + meetingId.trim();
 
-String folder = "meetings/" + safeMeetingFolder + "/" + safeType + "/";
+          String folder = "meetings/" + safeMeetingFolder + "/" + safeType + "/";
 
             return uploadToGcs(file, folder, "Meeting file uploaded successfully");
 

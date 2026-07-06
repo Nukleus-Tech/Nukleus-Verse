@@ -193,4 +193,46 @@ public class MeetingController {
 
         return response;
     }
+    @PostMapping("/update-files")
+public Map<String, Object> updateMeetingFiles(@RequestBody Meeting request) {
+
+    if (request.getMeetingId() == null || request.getMeetingId().trim().isEmpty()) {
+        return Map.of("success", false, "message", "Meeting ID is required");
+    }
+
+    Meeting meeting = meetingRepository.findByMeetingId(request.getMeetingId().trim());
+
+    if (meeting == null) {
+        return Map.of("success", false, "message", "Meeting not found");
+    }
+
+    if (request.getPdfUrl() != null) {
+        meeting.setPdfUrl(request.getPdfUrl());
+    }
+
+    if (request.getNotesUrl() != null) {
+        meeting.setNotesUrl(request.getNotesUrl());
+    }
+
+    if (request.getRecordingUrl() != null) {
+        meeting.setRecordingUrl(request.getRecordingUrl());
+    }
+
+    if (request.getPptUrl() != null) {
+        meeting.setPptUrl(request.getPptUrl());
+    }
+
+    meetingRepository.save(meeting);
+
+    Map<String, Object> response = new HashMap<>();
+    response.put("success", true);
+    response.put("message", "Meeting files updated successfully");
+    response.put("meetingId", meeting.getMeetingId());
+    response.put("pdfUrl", meeting.getPdfUrl());
+    response.put("recordingUrl", meeting.getRecordingUrl());
+    response.put("notesUrl", meeting.getNotesUrl());
+    response.put("pptUrl", meeting.getPptUrl());
+
+    return response;
+}
 }
