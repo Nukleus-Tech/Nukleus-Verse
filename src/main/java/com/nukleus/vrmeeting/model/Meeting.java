@@ -11,37 +11,40 @@ public class Meeting {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(name = "meeting_id", unique = true, nullable = false)
     private String meetingId;
 
-    @Column(nullable = false)
+    @Column(name = "room_code", nullable = false)
     private String roomCode;
 
-    @Column(nullable = false)
+    @Column(name = "host_email", nullable = false)
     private String hostEmail;
 
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
     private String status = "ACTIVE";
 
+    @Column(name = "meeting_name")
     private String meetingName;
 
-    @Column(length = 2000)
+    @Column(name = "recording_url", length = 2000)
     private String recordingUrl;
 
-    @Column(length = 2000)
+    @Column(name = "pdf_url", length = 2000)
     private String pdfUrl;
 
-    @Column(length = 2000)
+    @Column(name = "notes_url", length = 2000)
     private String notesUrl;
 
-    @Column(length = 2000)
+    @Column(name = "ppt_url", length = 2000)
     private String pptUrl;
 
-    @Column(length = 10000)
+    @Column(name = "participant_emails", length = 10000)
     private String participantEmails;
 
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "ended_at")
     private LocalDateTime endedAt;
 
     public Meeting() {

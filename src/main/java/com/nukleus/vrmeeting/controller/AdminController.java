@@ -63,4 +63,34 @@ public Map<String, Object> getAllMeetings() {
             "meetings", meetingRepository.findAll()
     );
 }
+@GetMapping("/dashboard")
+public Map<String, Object> getDashboard() {
+
+    var users = userRepository.findAll();
+    var meetings = meetingRepository.findAll();
+
+    long totalUsers = users.size();
+    long totalMeetings = meetings.size();
+
+    long activeMeetings = meetings.stream()
+            .filter(m -> "ACTIVE".equalsIgnoreCase(m.getStatus()))
+            .count();
+
+    long endedMeetings = meetings.stream()
+            .filter(m -> "ENDED".equalsIgnoreCase(m.getStatus()))
+            .count();
+
+    long avatarGeneratedUsers = users.stream()
+            .filter(u -> u.getAvatarUrl() != null && !u.getAvatarUrl().trim().isEmpty())
+            .count();
+
+    return Map.of(
+            "success", true,
+            "totalUsers", totalUsers,
+            "totalMeetings", totalMeetings,
+            "activeMeetings", activeMeetings,
+            "endedMeetings", endedMeetings,
+            "avatarGeneratedUsers", avatarGeneratedUsers
+    );
+}
 }
