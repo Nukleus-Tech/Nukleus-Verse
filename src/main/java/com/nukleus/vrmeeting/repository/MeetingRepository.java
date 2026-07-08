@@ -11,5 +11,5 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
     Meeting findByMeetingId(String meetingId);
 
     List<Meeting> findTop5ByOrderByCreatedAtDesc();
-
+  List<Meeting> findByHostEmailIgnoreCase(String hostEmail);
 }

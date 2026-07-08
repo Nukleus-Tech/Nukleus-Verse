@@ -1,6 +1,7 @@
 package com.nukleus.vrmeeting.model;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -36,16 +37,37 @@ public class User {
 
     private String meshyTaskId;
 
-    // NEW FIELD
+
+    // Current active meeting
     @Column(length = 100)
     private String currentMeetingId;
+
+
+    // Admin Users Module Fields
+
+    
+
+
+    @Column(length = 20)
+    private String accountStatus;
+
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
+
 
     public User() {
     }
 
+
     public Long getId() {
         return id;
     }
+
 
     public String getName() {
         return name;
@@ -55,6 +77,7 @@ public class User {
         this.name = name;
     }
 
+
     public String getEmail() {
         return email;
     }
@@ -63,21 +86,15 @@ public class User {
         this.email = email;
     }
 
+
     public String getPassword() {
         return password;
-    }
-
-    public String getIdleGlbUrl() {
-        return idleGlbUrl;
-    }
-
-    public void setIdleGlbUrl(String idleGlbUrl) {
-        this.idleGlbUrl = idleGlbUrl;
     }
 
     public void setPassword(String password) {
         this.password = password;
     }
+
 
     public String getImageUrl() {
         return imageUrl;
@@ -87,6 +104,7 @@ public class User {
         this.imageUrl = imageUrl;
     }
 
+
     public String getAvatarUrl() {
         return avatarUrl;
     }
@@ -94,6 +112,7 @@ public class User {
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
     }
+
 
     public String getRiggedGlbUrl() {
         return riggedGlbUrl;
@@ -103,6 +122,7 @@ public class User {
         this.riggedGlbUrl = riggedGlbUrl;
     }
 
+
     public String getWalkingGlbUrl() {
         return walkingGlbUrl;
     }
@@ -110,6 +130,16 @@ public class User {
     public void setWalkingGlbUrl(String walkingGlbUrl) {
         this.walkingGlbUrl = walkingGlbUrl;
     }
+
+
+    public String getIdleGlbUrl() {
+        return idleGlbUrl;
+    }
+
+    public void setIdleGlbUrl(String idleGlbUrl) {
+        this.idleGlbUrl = idleGlbUrl;
+    }
+
 
     public String getAvatarStatus() {
         return avatarStatus;
@@ -119,6 +149,7 @@ public class User {
         this.avatarStatus = avatarStatus;
     }
 
+
     public String getMeshyTaskId() {
         return meshyTaskId;
     }
@@ -127,7 +158,6 @@ public class User {
         this.meshyTaskId = meshyTaskId;
     }
 
-    // NEW GETTER & SETTER
 
     public String getCurrentMeetingId() {
         return currentMeetingId;
@@ -135,5 +165,43 @@ public class User {
 
     public void setCurrentMeetingId(String currentMeetingId) {
         this.currentMeetingId = currentMeetingId;
+    }
+
+
+    // Role
+
+    
+
+
+    // Account Status
+
+    public String getAccountStatus() {
+        return accountStatus;
+    }
+
+    public void setAccountStatus(String accountStatus) {
+        this.accountStatus = accountStatus;
+    }
+
+
+    // Created At
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+
+    // Last Login
+
+    public LocalDateTime getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(LocalDateTime lastLogin) {
+        this.lastLogin = lastLogin;
     }
 }

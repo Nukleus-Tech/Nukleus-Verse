@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 import java.util.Map;
 import com.nukleus.vrmeeting.repository.UserRepository;
@@ -53,11 +54,135 @@ public class AdminController {
     }
     @GetMapping("/users")
 public Map<String, Object> getAllUsers() {
+
+    var users = userRepository.findAll();
+    var meetings = meetingRepository.findAll();
+
+
+    // Cards
+
+    long totalUsers = users.size();
+
+
+    long activeUsers = users.stream()
+            .filter(u ->
+                    u.getCurrentMeetingId() != null
+                    &&
+                    !u.getCurrentMeetingId().isEmpty()
+            )
+            .count();
+
+
+    long blockedUsers = users.stream()
+            .filter(u ->
+                    "BLOCKED".equalsIgnoreCase(u.getAccountStatus())
+            )
+            .count();
+
+
+    LocalDateTime oneWeekAgo =
+            LocalDateTime.now().minusDays(7);
+
+
+    long newThisWeek = users.stream()
+            .filter(u ->
+                    u.getCreatedAt() != null
+                    &&
+                    u.getCreatedAt().isAfter(oneWeekAgo)
+            )
+            .count();
+
+
+
+    List<Map<String,Object>> userList =
+            users.stream()
+            .map(u -> {
+
+                Map<String,Object> data = new java.util.HashMap<>();
+
+                data.put("id", u.getId());
+                data.put("name", u.getName());
+                data.put("email", u.getEmail());
+
+
+                // Meetings count
+
+                long meetingCount = meetings.stream()
+                        .filter(m -> {
+
+                            boolean host =
+                                    m.getHostEmail() != null
+                                    &&
+                                    m.getHostEmail()
+                                    .equalsIgnoreCase(u.getEmail());
+
+
+                            boolean participant =
+                                    m.getParticipantEmails() != null
+                                    &&
+                                    m.getParticipantEmails()
+                                    .toLowerCase()
+                                    .contains(
+                                    u.getEmail().toLowerCase()
+                                    );
+
+
+                            return host || participant;
+
+                        })
+                        .count();
+
+
+
+                data.put("meetings", meetingCount);
+
+
+                data.put(
+                        "lastLogin",
+                        u.getLastLogin()
+                );
+
+
+                String status =
+                        u.getAccountStatus();
+
+
+                if(status == null || status.isEmpty()){
+                    status = "ACTIVE";
+                }
+
+
+                data.put(
+                        "status",
+                        status
+                );
+
+
+                return data;
+
+            })
+            .collect(Collectors.toList());
+
+
+
     return Map.of(
+
             "success", true,
-            "users", userRepository.findAll()
+
+
+            "cards", Map.of(
+                    "totalUsers", totalUsers,
+                    "activeUsers", activeUsers,
+                    "blockedUsers", blockedUsers,
+                    "newThisWeek", newThisWeek
+            ),
+
+
+            "users", userList
+
     );
 }
+    
 
 @GetMapping("/meetings")
 public Map<String, Object> getAllMeetings() {
@@ -153,6 +278,39 @@ public Map<String, Object> getDashboard() {
 
             "recentMeetings", recentMeetings
 
+    );
+}
+@GetMapping("/recordings")
+public Map<String, Object> getAllRecordings() {
+
+    List<Map<String, Object>> recordings =
+            meetingRepository.findAll()
+            .stream()
+            .filter(m ->
+                    m.getRecordingUrl() != null &&
+                    !m.getRecordingUrl().isEmpty()
+            )
+            .map(m -> {
+
+                Map<String, Object> data = new java.util.HashMap<>();
+
+                data.put("meetingId", m.getMeetingId());
+                data.put("meetingName", m.getMeetingName());
+                data.put("hostEmail", m.getHostEmail());
+                data.put("status", m.getStatus());
+                data.put("recordingUrl", m.getRecordingUrl());
+                data.put("createdAt", m.getCreatedAt());
+                data.put("endedAt", m.getEndedAt());
+
+                return data;
+
+            })
+            .collect(Collectors.toList());
+
+
+    return Map.of(
+            "success", true,
+            "recordings", recordings
     );
 }
 

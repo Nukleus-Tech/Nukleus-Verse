@@ -173,6 +173,12 @@ public class MeetingController {
                 .distinct()
                 .collect(Collectors.joining(","));
 
+                for (User user : meetingUsers) {
+    user.setCurrentMeetingId(null);
+}
+
+        userRepository.saveAll(meetingUsers);
+
         meeting.setParticipantEmails(participantEmails);
 
         meetingRepository.save(meeting);
@@ -234,5 +240,43 @@ public Map<String, Object> updateMeetingFiles(@RequestBody Meeting request) {
     response.put("pptUrl", meeting.getPptUrl());
 
     return response;
+}
+
+@PostMapping("/leave")
+public Map<String, Object> leaveMeeting(@RequestBody Map<String, String> request) {
+
+    String userEmail = request.get("userEmail");
+
+    if (userEmail == null || userEmail.trim().isEmpty()) {
+        return Map.of(
+                "success", false,
+                "message", "User email is required"
+        );
+    }
+
+
+    User user = userRepository.findByEmailIgnoreCase(
+            userEmail.trim()
+    );
+
+
+    if (user == null) {
+        return Map.of(
+                "success", false,
+                "message", "User not found"
+        );
+    }
+
+
+    user.setCurrentMeetingId(null);
+
+    userRepository.save(user);
+
+
+    return Map.of(
+            "success", true,
+            "message", "User left meeting successfully",
+            "userEmail", user.getEmail()
+    );
 }
 }
