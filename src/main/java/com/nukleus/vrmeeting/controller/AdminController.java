@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import com.nukleus.vrmeeting.repository.UserRepository;
 import com.nukleus.vrmeeting.repository.MeetingRepository;
+
 @CrossOrigin(origins = "*")
 
 @RestController
@@ -20,9 +21,9 @@ public class AdminController {
     @Autowired
     private AdminRepository adminRepository;
     @Autowired
-   private UserRepository userRepository;
+    private UserRepository userRepository;
 
-@Autowired
+    @Autowired
     private MeetingRepository meetingRepository;
 
     @PostMapping("/login")
@@ -45,278 +46,216 @@ public class AdminController {
             return Map.of("success", false, "message", "Invalid credentials");
         }
 
-return Map.of(
-        "success", true,
-        "message", "Login Successful",
-        "token", "admin-session-token",
-        "admin", Map.of(
-                "id", admin.getId(),
-                "name", admin.getName(),
-                "email", admin.getEmail(),
-                "role", admin.getRole()
-        )
-);
+        Map<String, Object> adminData = new java.util.HashMap<>();
+
+        adminData.put("id", admin.getId());
+        adminData.put("name", admin.getName());
+        adminData.put("email", admin.getEmail());
+        adminData.put("role", admin.getRole());
+
+        return Map.of(
+                "success", true,
+                "message", "Login Successful",
+                "token", "admin-session-token",
+                "admin", adminData);
     }
+
     @GetMapping("/users")
-public Map<String, Object> getAllUsers() {
+    public Map<String, Object> getAllUsers() {
 
-    var users = userRepository.findAll();
-    var meetings = meetingRepository.findAll();
+        var users = userRepository.findAll();
+        var meetings = meetingRepository.findAll();
 
+        // Cards
 
-    // Cards
+        long totalUsers = users.size();
 
-    long totalUsers = users.size();
+        long activeUsers = users.stream()
+                .filter(u -> u.getCurrentMeetingId() != null
+                        &&
+                        !u.getCurrentMeetingId().isEmpty())
+                .count();
 
+        long blockedUsers = users.stream()
+                .filter(u -> "BLOCKED".equalsIgnoreCase(u.getAccountStatus()))
+                .count();
 
-    long activeUsers = users.stream()
-            .filter(u ->
-                    u.getCurrentMeetingId() != null
-                    &&
-                    !u.getCurrentMeetingId().isEmpty()
-            )
-            .count();
+        LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
 
+        long newThisWeek = users.stream()
+                .filter(u -> u.getCreatedAt() != null
+                        &&
+                        u.getCreatedAt().isAfter(oneWeekAgo))
+                .count();
 
-    long blockedUsers = users.stream()
-            .filter(u ->
-                    "BLOCKED".equalsIgnoreCase(u.getAccountStatus())
-            )
-            .count();
+        List<Map<String, Object>> userList = users.stream()
+                .map(u -> {
 
+                    Map<String, Object> data = new java.util.HashMap<>();
 
-    LocalDateTime oneWeekAgo =
-            LocalDateTime.now().minusDays(7);
+                    data.put("id", u.getId());
+                    data.put("name", u.getName());
+                    data.put("email", u.getEmail());
 
+                    // Meetings count
 
-    long newThisWeek = users.stream()
-            .filter(u ->
-                    u.getCreatedAt() != null
-                    &&
-                    u.getCreatedAt().isAfter(oneWeekAgo)
-            )
-            .count();
+                    long meetingCount = meetings.stream()
+                            .filter(m -> {
 
+                                boolean host = m.getHostEmail() != null
+                                        &&
+                                        m.getHostEmail()
+                                                .equalsIgnoreCase(u.getEmail());
 
+                                boolean participant = m.getParticipantEmails() != null
+                                        &&
+                                        m.getParticipantEmails()
+                                                .toLowerCase()
+                                                .contains(
+                                                        u.getEmail().toLowerCase());
 
-    List<Map<String,Object>> userList =
-            users.stream()
-            .map(u -> {
+                                return host || participant;
 
-                Map<String,Object> data = new java.util.HashMap<>();
+                            })
+                            .count();
 
-                data.put("id", u.getId());
-                data.put("name", u.getName());
-                data.put("email", u.getEmail());
+                    data.put("meetings", meetingCount);
 
+                    data.put(
+                            "lastLogin",
+                            u.getLastLogin());
 
-                // Meetings count
+                    String status = u.getAccountStatus();
 
-                long meetingCount = meetings.stream()
-                        .filter(m -> {
+                    if (status == null || status.isEmpty()) {
+                        status = "ACTIVE";
+                    }
 
-                            boolean host =
-                                    m.getHostEmail() != null
-                                    &&
-                                    m.getHostEmail()
-                                    .equalsIgnoreCase(u.getEmail());
+                    data.put(
+                            "status",
+                            status);
 
+                    return data;
 
-                            boolean participant =
-                                    m.getParticipantEmails() != null
-                                    &&
-                                    m.getParticipantEmails()
-                                    .toLowerCase()
-                                    .contains(
-                                    u.getEmail().toLowerCase()
-                                    );
+                })
+                .collect(Collectors.toList());
 
+        return Map.of(
 
-                            return host || participant;
+                "success", true,
 
-                        })
-                        .count();
+                "cards", Map.of(
+                        "totalUsers", totalUsers,
+                        "activeUsers", activeUsers,
+                        "blockedUsers", blockedUsers,
+                        "newThisWeek", newThisWeek),
 
+                "users", userList
 
+        );
+    }
 
-                data.put("meetings", meetingCount);
+    @GetMapping("/meetings")
+    public Map<String, Object> getAllMeetings() {
+        return Map.of(
+                "success", true,
+                "meetings", meetingRepository.findAll());
+    }
 
+    @GetMapping("/dashboard")
+    public Map<String, Object> getDashboard() {
 
-                data.put(
-                        "lastLogin",
-                        u.getLastLogin()
-                );
+        var users = userRepository.findAll();
+        var meetings = meetingRepository.findAll();
 
+        // Cards
 
-                String status =
-                        u.getAccountStatus();
+        long totalUsers = users.size();
 
+        long activeUsers = users.stream()
+                .filter(u -> u.getCurrentMeetingId() != null
+                        &&
+                        !u.getCurrentMeetingId().isEmpty())
+                .count();
 
-                if(status == null || status.isEmpty()){
-                    status = "ACTIVE";
-                }
+        long totalMeetings = meetings.size();
 
+        long totalRecordings = meetings.stream()
+                .filter(m -> m.getRecordingUrl() != null
+                        &&
+                        !m.getRecordingUrl().isEmpty())
+                .count();
 
-                data.put(
-                        "status",
-                        status
-                );
+        long totalNotes = meetings.stream()
+                .filter(m -> m.getNotesUrl() != null
+                        &&
+                        !m.getNotesUrl().isEmpty())
+                .count();
 
+        // Recent Meetings
+        List<Map<String, Object>> recentMeetings = meetingRepository.findTop5ByOrderByCreatedAtDesc()
+                .stream()
+                .map(m -> {
 
-                return data;
+                    Map<String, Object> data = new java.util.HashMap<>();
 
-            })
-            .collect(Collectors.toList());
+                    data.put("meetingName", m.getMeetingName());
+                    data.put("hostEmail", m.getHostEmail());
+                    data.put("status", m.getStatus());
 
+                    return data;
 
+                })
+                .collect(Collectors.toList());
 
-    return Map.of(
+        return Map.of(
 
-            "success", true,
+                "success", true,
 
+                "cards", Map.of(
+                        "totalUsers", totalUsers,
+                        "activeUsers", activeUsers,
+                        "totalMeetings", totalMeetings,
+                        "recordings", totalRecordings,
+                        "notes", totalNotes),
 
-            "cards", Map.of(
-                    "totalUsers", totalUsers,
-                    "activeUsers", activeUsers,
-                    "blockedUsers", blockedUsers,
-                    "newThisWeek", newThisWeek
-            ),
+                "activities", List.of(
+                        "New user joined meeting room",
+                        "Recording generated successfully",
+                        "PDF summary created for meeting"),
 
+                "recentMeetings", recentMeetings
 
-            "users", userList
+        );
+    }
 
-    );
-}
-    
+    @GetMapping("/recordings")
+    public Map<String, Object> getAllRecordings() {
 
-@GetMapping("/meetings")
-public Map<String, Object> getAllMeetings() {
-    return Map.of(
-            "success", true,
-            "meetings", meetingRepository.findAll()
-    );
-}
-@GetMapping("/dashboard")
-public Map<String, Object> getDashboard() {
+        List<Map<String, Object>> recordings = meetingRepository.findAll()
+                .stream()
+                .filter(m -> m.getRecordingUrl() != null &&
+                        !m.getRecordingUrl().isEmpty())
+                .map(m -> {
 
-    var users = userRepository.findAll();
-    var meetings = meetingRepository.findAll();
+                    Map<String, Object> data = new java.util.HashMap<>();
 
+                    data.put("meetingId", m.getMeetingId());
+                    data.put("meetingName", m.getMeetingName());
+                    data.put("hostEmail", m.getHostEmail());
+                    data.put("status", m.getStatus());
+                    data.put("recordingUrl", m.getRecordingUrl());
+                    data.put("createdAt", m.getCreatedAt());
+                    data.put("endedAt", m.getEndedAt());
 
-    // Cards
+                    return data;
 
-    long totalUsers = users.size();
+                })
+                .collect(Collectors.toList());
 
-
-    long activeUsers = users.stream()
-            .filter(u ->
-                    u.getCurrentMeetingId() != null
-                    &&
-                    !u.getCurrentMeetingId().isEmpty()
-            )
-            .count();
-
-
-    long totalMeetings = meetings.size();
-
-
-    long totalRecordings = meetings.stream()
-            .filter(m ->
-                    m.getRecordingUrl() != null
-                    &&
-                    !m.getRecordingUrl().isEmpty()
-            )
-            .count();
-
-
-    long totalNotes = meetings.stream()
-            .filter(m ->
-                    m.getNotesUrl() != null
-                    &&
-                    !m.getNotesUrl().isEmpty()
-            )
-            .count();
-
-
-
-    // Recent Meetings
-    List<Map<String,Object>> recentMeetings =
-        meetingRepository.findTop5ByOrderByCreatedAtDesc()
-        .stream()
-        .map(m -> {
-
-            Map<String,Object> data = new java.util.HashMap<>();
-
-            data.put("meetingName", m.getMeetingName());
-            data.put("hostEmail", m.getHostEmail());
-            data.put("status", m.getStatus());
-
-            return data;
-
-        })
-        .collect(Collectors.toList());
-
-
-
-
-
-    return Map.of(
-
-            "success", true,
-
-
-            "cards", Map.of(
-                    "totalUsers", totalUsers,
-                    "activeUsers", activeUsers,
-                    "totalMeetings", totalMeetings,
-                    "recordings", totalRecordings,
-                    "notes", totalNotes
-            ),
-
-
-            "activities", List.of(
-                    "New user joined meeting room",
-                    "Recording generated successfully",
-                    "PDF summary created for meeting"
-            ),
-
-
-            "recentMeetings", recentMeetings
-
-    );
-}
-@GetMapping("/recordings")
-public Map<String, Object> getAllRecordings() {
-
-    List<Map<String, Object>> recordings =
-            meetingRepository.findAll()
-            .stream()
-            .filter(m ->
-                    m.getRecordingUrl() != null &&
-                    !m.getRecordingUrl().isEmpty()
-            )
-            .map(m -> {
-
-                Map<String, Object> data = new java.util.HashMap<>();
-
-                data.put("meetingId", m.getMeetingId());
-                data.put("meetingName", m.getMeetingName());
-                data.put("hostEmail", m.getHostEmail());
-                data.put("status", m.getStatus());
-                data.put("recordingUrl", m.getRecordingUrl());
-                data.put("createdAt", m.getCreatedAt());
-                data.put("endedAt", m.getEndedAt());
-
-                return data;
-
-            })
-            .collect(Collectors.toList());
-
-
-    return Map.of(
-            "success", true,
-            "recordings", recordings
-    );
-}
+        return Map.of(
+                "success", true,
+                "recordings", recordings);
+    }
 
 }
