@@ -4,10 +4,13 @@ import com.nukleus.vrmeeting.model.Admin;
 import com.nukleus.vrmeeting.repository.AdminRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import java.util.Map;
 import com.nukleus.vrmeeting.repository.UserRepository;
 import com.nukleus.vrmeeting.repository.MeetingRepository;
+@CrossOrigin(origins = "*")
 
 @RestController
 @RequestMapping("/api/admin")
@@ -37,7 +40,7 @@ public class AdminController {
 
         Admin admin = adminRepository.findByEmailIgnoreCase(email);
 
-        if (admin == null || !admin.getPassword().equals(password)) {
+        if (admin == null || !admin.getPassword().trim().equals(password)) {
             return Map.of("success", false, "message", "Invalid credentials");
         }
 
@@ -69,28 +72,88 @@ public Map<String, Object> getDashboard() {
     var users = userRepository.findAll();
     var meetings = meetingRepository.findAll();
 
+
+    // Cards
+
     long totalUsers = users.size();
+
+
+    long activeUsers = users.stream()
+            .filter(u ->
+                    u.getCurrentMeetingId() != null
+                    &&
+                    !u.getCurrentMeetingId().isEmpty()
+            )
+            .count();
+
+
     long totalMeetings = meetings.size();
 
-    long activeMeetings = meetings.stream()
-            .filter(m -> "ACTIVE".equalsIgnoreCase(m.getStatus()))
+
+    long totalRecordings = meetings.stream()
+            .filter(m ->
+                    m.getRecordingUrl() != null
+                    &&
+                    !m.getRecordingUrl().isEmpty()
+            )
             .count();
 
-    long endedMeetings = meetings.stream()
-            .filter(m -> "ENDED".equalsIgnoreCase(m.getStatus()))
+
+    long totalNotes = meetings.stream()
+            .filter(m ->
+                    m.getNotesUrl() != null
+                    &&
+                    !m.getNotesUrl().isEmpty()
+            )
             .count();
 
-    long avatarGeneratedUsers = users.stream()
-            .filter(u -> u.getAvatarUrl() != null && !u.getAvatarUrl().trim().isEmpty())
-            .count();
+
+
+    // Recent Meetings
+    List<Map<String,Object>> recentMeetings =
+        meetingRepository.findTop5ByOrderByCreatedAtDesc()
+        .stream()
+        .map(m -> {
+
+            Map<String,Object> data = new java.util.HashMap<>();
+
+            data.put("meetingName", m.getMeetingName());
+            data.put("hostEmail", m.getHostEmail());
+            data.put("status", m.getStatus());
+
+            return data;
+
+        })
+        .collect(Collectors.toList());
+
+
+
+
 
     return Map.of(
+
             "success", true,
-            "totalUsers", totalUsers,
-            "totalMeetings", totalMeetings,
-            "activeMeetings", activeMeetings,
-            "endedMeetings", endedMeetings,
-            "avatarGeneratedUsers", avatarGeneratedUsers
+
+
+            "cards", Map.of(
+                    "totalUsers", totalUsers,
+                    "activeUsers", activeUsers,
+                    "totalMeetings", totalMeetings,
+                    "recordings", totalRecordings,
+                    "notes", totalNotes
+            ),
+
+
+            "activities", List.of(
+                    "New user joined meeting room",
+                    "Recording generated successfully",
+                    "PDF summary created for meeting"
+            ),
+
+
+            "recentMeetings", recentMeetings
+
     );
 }
+
 }
