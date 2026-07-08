@@ -45,12 +45,17 @@ public class AdminController {
             return Map.of("success", false, "message", "Invalid credentials");
         }
 
-        return Map.of(
-                "success", true,
-                "message", "Login Successful",
-                "adminId", admin.getId(),
-                "email", admin.getEmail()
-        );
+return Map.of(
+        "success", true,
+        "message", "Login Successful",
+        "token", "admin-session-token",
+        "admin", Map.of(
+                "id", admin.getId(),
+                "name", admin.getName(),
+                "email", admin.getEmail(),
+                "role", admin.getRole()
+        )
+);
     }
     @GetMapping("/users")
 public Map<String, Object> getAllUsers() {
