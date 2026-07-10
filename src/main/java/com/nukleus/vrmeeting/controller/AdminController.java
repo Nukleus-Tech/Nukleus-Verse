@@ -13,6 +13,9 @@ import java.util.HashMap;
 import java.util.Comparator;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+// import java.util.HashSet;
+// import java.util.Set;
 
 import java.util.Map;
 import com.nukleus.vrmeeting.repository.UserRepository;
@@ -436,23 +439,27 @@ public class AdminController {
 
                                         // Duration
 
-                                        String durationText = "In Progress";
+                                        String duration = "Not Available";
 
                                         if (m.getCreatedAt() != null &&
                                                         m.getEndedAt() != null) {
 
-                                                long minutes = Duration.between(
+                                                long seconds = Duration.between(
                                                                 m.getCreatedAt(),
-                                                                m.getEndedAt())
-                                                                .toMinutes();
+                                                                m.getEndedAt()).getSeconds();
 
-                                                durationText = minutes + " min";
+                                                long minutes = seconds / 60;
 
+                                                if (minutes <= 0) {
+                                                        duration = "Less than 1 min";
+                                                } else {
+                                                        duration = minutes + " min";
+                                                }
                                         }
 
                                         data.put(
                                                         "duration",
-                                                        durationText);
+                                                        duration);
 
                                         // Status
 
@@ -617,18 +624,26 @@ public class AdminController {
                                                         m.getHostEmail());
 
                                         // Duration
-
                                         String duration = "Not Available";
 
                                         if (m.getCreatedAt() != null &&
                                                         m.getEndedAt() != null) {
 
-                                                long minutes = java.time.Duration.between(
+                                                long seconds = Duration.between(
                                                                 m.getCreatedAt(),
-                                                                m.getEndedAt())
-                                                                .toMinutes();
+                                                                m.getEndedAt()).getSeconds();
 
-                                                duration = minutes + " min";
+                                                long minutes = seconds / 60;
+
+                                                if (minutes <= 0) {
+
+                                                        duration = "Less than 1 min";
+
+                                                } else {
+
+                                                        duration = minutes + " min";
+
+                                                }
                                         }
 
                                         data.put(
@@ -669,6 +684,161 @@ public class AdminController {
                                 true,
                                 "recordings",
                                 recordings);
+        }
+
+        @GetMapping("/notes")
+        public Map<String, Object> getAllNotes() {
+
+                List<Meeting> meetings = meetingRepository.findAll();
+
+                // Cards
+
+                long totalNotes = meetings.stream()
+                                .filter(m -> m.getNotesUrl() != null &&
+                                                !m.getNotesUrl().isEmpty())
+                                .count();
+
+                LocalDate today = LocalDate.now();
+
+                long todayNotes = meetings.stream()
+                                .filter(m -> m.getNotesUrl() != null &&
+                                                !m.getNotesUrl().isEmpty() &&
+                                                m.getCreatedAt() != null &&
+                                                m.getCreatedAt().toLocalDate()
+                                                                .equals(today))
+                                .count();
+
+                long hosts = meetings.stream()
+                                .filter(m -> m.getNotesUrl() != null &&
+                                                !m.getNotesUrl().isEmpty())
+                                .map(Meeting::getHostEmail)
+                                .filter(email -> email != null)
+                                .distinct()
+                                .count();
+
+                List<Map<String, Object>> notes = meetings.stream()
+                                .filter(m -> m.getNotesUrl() != null &&
+                                                !m.getNotesUrl().isEmpty())
+                                .map(m -> {
+
+                                        Map<String, Object> data = new HashMap<>();
+
+                                        data.put(
+                                                        "meetingName",
+                                                        m.getMeetingName() != null
+                                                                        ? m.getMeetingName()
+                                                                        : "Untitled Meeting");
+
+                                        data.put(
+                                                        "hostEmail",
+                                                        m.getHostEmail());
+
+                                        data.put(
+                                                        "notesUrl",
+                                                        m.getNotesUrl());
+
+                                        data.put(
+                                                        "created",
+                                                        m.getCreatedAt() != null
+                                                                        ? m.getCreatedAt()
+                                                                        : "Not Available");
+
+                                        // Temporary Preview
+
+                                        data.put(
+                                                        "notesPreview",
+                                                        " Available Soon");
+
+                                        data.put(
+                                                        "meetingId",
+                                                        m.getMeetingId());
+
+                                        return data;
+
+                                })
+                                .collect(Collectors.toList());
+
+                return Map.of(
+
+                                "success",
+                                true,
+
+                                "cards",
+                                Map.of(
+                                                "totalNotes",
+                                                totalNotes,
+
+                                                "today",
+                                                todayNotes,
+
+                                                "hosts",
+                                                hosts),
+
+                                "notes",
+                                notes
+
+                );
+
+        }
+
+        @GetMapping("/notes/{meetingId}")
+        public Map<String, Object> getNoteDetails(
+                        @PathVariable String meetingId) {
+
+                Meeting meeting = meetingRepository.findByMeetingId(meetingId);
+
+                if (meeting == null) {
+
+                        return Map.of(
+                                        "success",
+                                        false,
+                                        "message",
+                                        "Meeting not found");
+                }
+
+                if (meeting.getNotesUrl() == null ||
+                                meeting.getNotesUrl().isEmpty()) {
+
+                        return Map.of(
+                                        "success",
+                                        false,
+                                        "message",
+                                        "Notes not available");
+                }
+
+                Map<String, Object> notes = new HashMap<>();
+
+                notes.put(
+                                "meetingName",
+                                meeting.getMeetingName() != null
+                                                ? meeting.getMeetingName()
+                                                : "Untitled Meeting");
+
+                notes.put(
+                                "hostEmail",
+                                meeting.getHostEmail());
+
+                notes.put(
+                                "created",
+                                meeting.getCreatedAt());
+
+                notes.put(
+                                "notesPreview",
+                                "Available Soon");
+
+                notes.put(
+                                "notesUrl",
+                                meeting.getNotesUrl());
+
+                notes.put(
+                                "meetingId",
+                                meeting.getMeetingId());
+
+                return Map.of(
+                                "success",
+                                true,
+                                "notes",
+                                notes);
         }
 
 }
