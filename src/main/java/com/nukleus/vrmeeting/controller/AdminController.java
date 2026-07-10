@@ -598,15 +598,66 @@ public class AdminController {
                                                 !m.getRecordingUrl().isEmpty())
                                 .map(m -> {
 
-                                        Map<String, Object> data = new java.util.HashMap<>();
+                                        Map<String, Object> data = new HashMap<>();
 
-                                        data.put("meetingId", m.getMeetingId());
-                                        data.put("meetingName", m.getMeetingName());
-                                        data.put("hostEmail", m.getHostEmail());
-                                        data.put("status", m.getStatus());
-                                        data.put("recordingUrl", m.getRecordingUrl());
-                                        data.put("createdAt", m.getCreatedAt());
-                                        data.put("endedAt", m.getEndedAt());
+                                        data.put(
+                                                        "recordingName",
+                                                        m.getRecordingFileName() != null
+                                                                        ? m.getRecordingFileName()
+                                                                        : "Recording File");
+
+                                        data.put(
+                                                        "meetingName",
+                                                        m.getMeetingName() != null
+                                                                        ? m.getMeetingName()
+                                                                        : "Untitled Meeting");
+
+                                        data.put(
+                                                        "hostEmail",
+                                                        m.getHostEmail());
+
+                                        // Duration
+
+                                        String duration = "Not Available";
+
+                                        if (m.getCreatedAt() != null &&
+                                                        m.getEndedAt() != null) {
+
+                                                long minutes = java.time.Duration.between(
+                                                                m.getCreatedAt(),
+                                                                m.getEndedAt())
+                                                                .toMinutes();
+
+                                                duration = minutes + " min";
+                                        }
+
+                                        data.put(
+                                                        "duration",
+                                                        duration);
+
+                                        data.put(
+                                                        "fileSize",
+                                                        m.getRecordingFileSize() != null
+                                                                        ? m.getRecordingFileSize()
+                                                                        : "Not Available");
+
+                                        data.put(
+                                                        "created",
+                                                        m.getCreatedAt() != null
+                                                                        ? m.getCreatedAt()
+                                                                        : "Not Available");
+
+                                        data.put(
+                                                        "status",
+                                                        "AVAILABLE");
+
+                                        data.put(
+                                                        "recordingUrl",
+                                                        m.getRecordingUrl());
+
+                                        data.put(
+                                                        "meetingId",
+                                                        m.getMeetingId());
 
                                         return data;
 
@@ -614,8 +665,10 @@ public class AdminController {
                                 .collect(Collectors.toList());
 
                 return Map.of(
-                                "success", true,
-                                "recordings", recordings);
+                                "success",
+                                true,
+                                "recordings",
+                                recordings);
         }
 
 }
