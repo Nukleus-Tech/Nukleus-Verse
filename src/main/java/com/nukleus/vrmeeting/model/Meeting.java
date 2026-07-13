@@ -36,6 +36,8 @@ public class Meeting {
     @Column(name = "recording_file_size")
     private String recordingFileSize;
 
+    @Column(name = "recording_status")
+    private String recordingStatus = "NOT_STARTED";
 
     @Column(name = "pdf_url", length = 2000)
     private String pdfUrl;
@@ -55,15 +57,12 @@ public class Meeting {
     @Column(name = "ended_at")
     private LocalDateTime endedAt;
 
-
     public Meeting() {
     }
-
 
     public Long getId() {
         return id;
     }
-
 
     public String getMeetingId() {
         return meetingId;
@@ -73,7 +72,6 @@ public class Meeting {
         this.meetingId = meetingId;
     }
 
-
     public String getRoomCode() {
         return roomCode;
     }
@@ -81,7 +79,6 @@ public class Meeting {
     public void setRoomCode(String roomCode) {
         this.roomCode = roomCode;
     }
-
 
     public String getHostEmail() {
         return hostEmail;
@@ -91,7 +88,6 @@ public class Meeting {
         this.hostEmail = hostEmail;
     }
 
-
     public String getStatus() {
         return status;
     }
@@ -99,7 +95,6 @@ public class Meeting {
     public void setStatus(String status) {
         this.status = status;
     }
-
 
     public String getMeetingName() {
         return meetingName;
@@ -109,7 +104,6 @@ public class Meeting {
         this.meetingName = meetingName;
     }
 
-
     public String getRecordingUrl() {
         return recordingUrl;
     }
@@ -117,7 +111,6 @@ public class Meeting {
     public void setRecordingUrl(String recordingUrl) {
         this.recordingUrl = recordingUrl;
     }
-
 
     // NEW Recording Name
     public String getRecordingFileName() {
@@ -128,7 +121,6 @@ public class Meeting {
         this.recordingFileName = recordingFileName;
     }
 
-
     // NEW Recording Size
     public String getRecordingFileSize() {
         return recordingFileSize;
@@ -138,6 +130,14 @@ public class Meeting {
         this.recordingFileSize = recordingFileSize;
     }
 
+    // NEW Recording Status
+    public String getRecordingStatus() {
+        return recordingStatus;
+    }
+
+    public void setRecordingStatus(String recordingStatus) {
+        this.recordingStatus = recordingStatus;
+    }
 
     public String getPdfUrl() {
         return pdfUrl;
@@ -147,7 +147,6 @@ public class Meeting {
         this.pdfUrl = pdfUrl;
     }
 
-
     public String getNotesUrl() {
         return notesUrl;
     }
@@ -155,7 +154,6 @@ public class Meeting {
     public void setNotesUrl(String notesUrl) {
         this.notesUrl = notesUrl;
     }
-
 
     public String getPptUrl() {
         return pptUrl;
@@ -165,7 +163,6 @@ public class Meeting {
         this.pptUrl = pptUrl;
     }
 
-
     public String getParticipantEmails() {
         return participantEmails;
     }
@@ -174,7 +171,6 @@ public class Meeting {
         this.participantEmails = participantEmails;
     }
 
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -182,7 +178,6 @@ public class Meeting {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-
 
     public LocalDateTime getEndedAt() {
         return endedAt;

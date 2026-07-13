@@ -45,10 +45,11 @@ public class StorageController {
             String safeMeetingFolder = "meeting-id-" + meetingId.trim();
 
             String folder = "meetings/" + safeMeetingFolder + "/" + safeType + "/";
-            Map<String, Object> response = uploadToGcs(
-                    file,
-                    folder,
-                    "Meeting file uploaded successfully");
+            Map<String, Object> response = new java.util.HashMap<>(
+                    uploadToGcs(
+                            file,
+                            folder,
+                            "Meeting file uploaded successfully"));
 
             if (Boolean.TRUE.equals(response.get("success"))) {
 
@@ -74,6 +75,11 @@ public class StorageController {
 
                             meeting.setRecordingFileSize(
                                     String.format("%.2f MB", sizeMB));
+                            meeting.setRecordingStatus("AVAILABLE");
+
+                            response.put(
+                                    "recordingStatus",
+                                    "AVAILABLE");
 
                             break;
 

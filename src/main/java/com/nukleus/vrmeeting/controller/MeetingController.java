@@ -64,6 +64,7 @@ public class MeetingController {
         }
 
         meeting.setStatus("ACTIVE");
+        meeting.setRecordingStatus("NOT_STARTED");
         meeting.setCreatedAt(LocalDateTime.now());
 
         meetingRepository.save(meeting);
@@ -148,6 +149,7 @@ public class MeetingController {
 
         meeting.setStatus("ENDED");
         meeting.setEndedAt(LocalDateTime.now());
+        meeting.setRecordingStatus("PROCESSING");
 
         if (request.getRecordingUrl() != null) {
             meeting.setRecordingUrl(request.getRecordingUrl());
@@ -173,9 +175,9 @@ public class MeetingController {
                 .distinct()
                 .collect(Collectors.joining(","));
 
-                for (User user : meetingUsers) {
-    user.setCurrentMeetingId(null);
-}
+        for (User user : meetingUsers) {
+            user.setCurrentMeetingId(null);
+        }
 
         userRepository.saveAll(meetingUsers);
 
@@ -192,91 +194,96 @@ public class MeetingController {
         response.put("meetingName", meeting.getMeetingName());
         response.put("participantEmails", meeting.getParticipantEmails());
         response.put("status", meeting.getStatus());
+        response.put(
+                "recordingStatus",
+                meeting.getRecordingStatus());
+
         response.put("recordingUrl", meeting.getRecordingUrl());
+
         response.put("pdfUrl", meeting.getPdfUrl());
         response.put("notesUrl", meeting.getNotesUrl());
         response.put("pptUrl", meeting.getPptUrl());
 
         return response;
     }
+
     @PostMapping("/update-files")
-public Map<String, Object> updateMeetingFiles(@RequestBody Meeting request) {
+    public Map<String, Object> updateMeetingFiles(@RequestBody Meeting request) {
 
-    if (request.getMeetingId() == null || request.getMeetingId().trim().isEmpty()) {
-        return Map.of("success", false, "message", "Meeting ID is required");
+        if (request.getMeetingId() == null || request.getMeetingId().trim().isEmpty()) {
+            return Map.of("success", false, "message", "Meeting ID is required");
+        }
+
+        Meeting meeting = meetingRepository.findByMeetingId(request.getMeetingId().trim());
+
+        if (meeting == null) {
+            return Map.of("success", false, "message", "Meeting not found");
+        }
+
+        if (request.getPdfUrl() != null) {
+            meeting.setPdfUrl(request.getPdfUrl());
+        }
+
+        if (request.getNotesUrl() != null) {
+            meeting.setNotesUrl(request.getNotesUrl());
+        }
+
+        if (request.getRecordingUrl() != null) {
+            meeting.setRecordingUrl(request.getRecordingUrl());
+        }
+        if (request.getRecordingStatus() != null) {
+            meeting.setRecordingStatus(
+                    request.getRecordingStatus());
+        }
+
+        if (request.getPptUrl() != null) {
+            meeting.setPptUrl(request.getPptUrl());
+        }
+
+        meetingRepository.save(meeting);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Meeting files updated successfully");
+        response.put("meetingId", meeting.getMeetingId());
+        response.put("pdfUrl", meeting.getPdfUrl());
+        response.put("recordingUrl", meeting.getRecordingUrl());
+        response.put("notesUrl", meeting.getNotesUrl());
+        response.put("pptUrl", meeting.getPptUrl());
+        response.put(
+                "recordingStatus",
+                meeting.getRecordingStatus());
+
+        return response;
     }
 
-    Meeting meeting = meetingRepository.findByMeetingId(request.getMeetingId().trim());
+    @PostMapping("/leave")
+    public Map<String, Object> leaveMeeting(@RequestBody Map<String, String> request) {
 
-    if (meeting == null) {
-        return Map.of("success", false, "message", "Meeting not found");
-    }
+        String userEmail = request.get("userEmail");
 
-    if (request.getPdfUrl() != null) {
-        meeting.setPdfUrl(request.getPdfUrl());
-    }
+        if (userEmail == null || userEmail.trim().isEmpty()) {
+            return Map.of(
+                    "success", false,
+                    "message", "User email is required");
+        }
 
-    if (request.getNotesUrl() != null) {
-        meeting.setNotesUrl(request.getNotesUrl());
-    }
+        User user = userRepository.findByEmailIgnoreCase(
+                userEmail.trim());
 
-    if (request.getRecordingUrl() != null) {
-        meeting.setRecordingUrl(request.getRecordingUrl());
-    }
+        if (user == null) {
+            return Map.of(
+                    "success", false,
+                    "message", "User not found");
+        }
 
-    if (request.getPptUrl() != null) {
-        meeting.setPptUrl(request.getPptUrl());
-    }
+        user.setCurrentMeetingId(null);
 
-    meetingRepository.save(meeting);
+        userRepository.save(user);
 
-    Map<String, Object> response = new HashMap<>();
-    response.put("success", true);
-    response.put("message", "Meeting files updated successfully");
-    response.put("meetingId", meeting.getMeetingId());
-    response.put("pdfUrl", meeting.getPdfUrl());
-    response.put("recordingUrl", meeting.getRecordingUrl());
-    response.put("notesUrl", meeting.getNotesUrl());
-    response.put("pptUrl", meeting.getPptUrl());
-
-    return response;
-}
-
-@PostMapping("/leave")
-public Map<String, Object> leaveMeeting(@RequestBody Map<String, String> request) {
-
-    String userEmail = request.get("userEmail");
-
-    if (userEmail == null || userEmail.trim().isEmpty()) {
         return Map.of(
-                "success", false,
-                "message", "User email is required"
-        );
+                "success", true,
+                "message", "User left meeting successfully",
+                "userEmail", user.getEmail());
     }
-
-
-    User user = userRepository.findByEmailIgnoreCase(
-            userEmail.trim()
-    );
-
-
-    if (user == null) {
-        return Map.of(
-                "success", false,
-                "message", "User not found"
-        );
-    }
-
-
-    user.setCurrentMeetingId(null);
-
-    userRepository.save(user);
-
-
-    return Map.of(
-            "success", true,
-            "message", "User left meeting successfully",
-            "userEmail", user.getEmail()
-    );
-}
 }
