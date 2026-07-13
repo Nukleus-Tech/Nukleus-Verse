@@ -1,8 +1,12 @@
 package com.nukleus.vrmeeting.controller;
 
+import com.nukleus.vrmeeting.security.JwtUtil;
+
 import com.nukleus.vrmeeting.model.Admin;
 import com.nukleus.vrmeeting.model.Meeting;
 import com.nukleus.vrmeeting.repository.AdminRepository;
+
+//import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -36,6 +40,8 @@ public class AdminController {
 
         @Autowired
         private MeetingRepository meetingRepository;
+        @Autowired
+        private JwtUtil jwtUtil;
 
         @PostMapping("/login")
         public Map<String, Object> login(@RequestBody Admin request) {
@@ -64,10 +70,13 @@ public class AdminController {
                 adminData.put("email", admin.getEmail());
                 adminData.put("role", admin.getRole());
 
+                String token = jwtUtil.generateToken(
+                                admin.getEmail());
+
                 return Map.of(
                                 "success", true,
                                 "message", "Login Successful",
-                                "token", "admin-session-token",
+                                "token", token,
                                 "admin", adminData);
         }
 
