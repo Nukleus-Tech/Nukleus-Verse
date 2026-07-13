@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.Arrays;
 //  import java.util.ArrayList;
 import java.util.Comparator;
 import java.time.Duration;
@@ -839,6 +840,248 @@ public class AdminController {
                                 true,
                                 "notes",
                                 notes);
+        }
+
+        @GetMapping("/meetings/{meetingId}")
+        public Map<String, Object> getMeetingDetails(
+                        @PathVariable String meetingId) {
+
+                Meeting meeting = meetingRepository.findByMeetingId(meetingId);
+
+                if (meeting == null) {
+
+                        return Map.of(
+                                        "success",
+                                        false,
+                                        "message",
+                                        "Meeting not found");
+                }
+
+                Map<String, Object> data = new HashMap<>();
+
+                data.put(
+                                "meetingId",
+                                meeting.getMeetingId());
+
+                data.put(
+                                "meetingName",
+                                meeting.getMeetingName() != null
+                                                ? meeting.getMeetingName()
+                                                : "Untitled Meeting");
+
+                data.put(
+                                "hostEmail",
+                                meeting.getHostEmail());
+
+                data.put(
+                                "status",
+                                meeting.getStatus());
+
+                data.put(
+                                "createdAt",
+                                meeting.getCreatedAt());
+
+                data.put(
+                                "endedAt",
+                                meeting.getEndedAt());
+
+                // Duration
+
+                String duration = "Not Available";
+
+                if (meeting.getCreatedAt() != null &&
+                                meeting.getEndedAt() != null) {
+
+                        long seconds = Duration.between(
+                                        meeting.getCreatedAt(),
+                                        meeting.getEndedAt()).getSeconds();
+
+                        long minutes = seconds / 60;
+
+                        if (minutes <= 0) {
+
+                                duration = "Less than 1 min";
+
+                        } else {
+
+                                duration = minutes + " min";
+
+                        }
+
+                }
+
+                data.put(
+                                "duration",
+                                duration);
+                // Participants
+
+                List<String> participants = new java.util.ArrayList<>();
+
+                if (meeting.getParticipantEmails() != null &&
+                                !meeting.getParticipantEmails().isEmpty()) {
+
+                        participants = Arrays.asList(
+                                        meeting.getParticipantEmails()
+                                                        .split(","));
+
+                }
+
+                data.put(
+                                "participants",
+                                participants);
+                data.put(
+                                "participantCount",
+                                participants.size());
+
+                // Files
+
+                data.put(
+                                "recordingUrl",
+                                meeting.getRecordingUrl());
+
+                data.put(
+                                "notesUrl",
+                                meeting.getNotesUrl());
+
+                data.put(
+                                "pdfUrl",
+                                meeting.getPdfUrl());
+
+                // Recording Status
+
+                String recordingStatus;
+
+                if (meeting.getRecordingUrl() != null &&
+                                !meeting.getRecordingUrl().isEmpty()) {
+
+                        recordingStatus = "AVAILABLE";
+
+                } else if ("ENDED".equalsIgnoreCase(meeting.getStatus())) {
+
+                        recordingStatus = "PROCESSING";
+
+                } else {
+
+                        recordingStatus = "NOT_STARTED";
+
+                }
+
+                data.put(
+                                "recordingStatus",
+                                recordingStatus);
+
+                // Notes Status
+
+                String notesStatus;
+
+                if (meeting.getNotesUrl() != null &&
+                                !meeting.getNotesUrl().isEmpty()) {
+
+                        notesStatus = "AVAILABLE";
+
+                } else if ("ENDED".equalsIgnoreCase(meeting.getStatus())) {
+
+                        notesStatus = "PROCESSING";
+
+                } else {
+
+                        notesStatus = "NOT_STARTED";
+
+                }
+
+                data.put(
+                                "notesStatus",
+                                notesStatus);
+
+                // Summary Status
+
+                String summaryStatus;
+
+                if (meeting.getPdfUrl() != null &&
+                                !meeting.getPdfUrl().isEmpty()) {
+
+                        summaryStatus = "READY";
+
+                } else if ("ENDED".equalsIgnoreCase(meeting.getStatus())) {
+
+                        summaryStatus = "GENERATING";
+
+                } else {
+
+                        summaryStatus = "NOT_STARTED";
+
+                }
+
+                data.put(
+                                "summaryStatus",
+                                summaryStatus);
+
+                return Map.of(
+                                "success",
+                                true,
+                                "meeting",
+                                data);
+
+        }
+
+        @GetMapping("/settings/profile")
+        public Map<String, Object> getAdminProfile() {
+
+                Map<String, Object> admin = new HashMap<>();
+
+                admin.put(
+                                "name",
+                                "Super Admin");
+
+                admin.put(
+                                "email",
+                                "admin@nukleus.work");
+
+                admin.put(
+                                "role",
+                                "SUPER_ADMIN");
+
+                admin.put(
+                                "status",
+                                "ACTIVE");
+
+                return Map.of(
+                                "success",
+                                true,
+                                "admin",
+                                admin);
+        }
+
+        @GetMapping("/settings/system")
+        public Map<String, Object> getSystemInformation() {
+
+                Map<String, Object> system = new HashMap<>();
+
+                system.put(
+                                "application",
+                                "Nukleus-verse");
+
+                system.put(
+                                "backend",
+                                "Spring Boot 3.5.3");
+
+                system.put(
+                                "database",
+                                "PostgreSQL");
+
+                system.put(
+                                "storage",
+                                "Google Cloud Storage");
+
+                system.put(
+                                "version",
+                                "1.0");
+
+                return Map.of(
+                                "success",
+                                true,
+                                "system",
+                                system);
         }
 
 }
