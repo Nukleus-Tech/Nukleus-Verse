@@ -2,14 +2,6 @@ package com.nukleus.vrmeeting.controller;
 
 import com.nukleus.vrmeeting.model.User;
 import com.nukleus.vrmeeting.repository.UserRepository;
-import com.nukleus.vrmeeting.security.JwtUtil;
-import com.nukleus.vrmeeting.dto.GoogleLoginRequest;
-import com.nukleus.vrmeeting.service.GoogleAuthService;
-
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-
-import java.util.HashMap;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,13 +11,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-        @Autowired
-        private JwtUtil jwtUtil;
 
         @Autowired
         private UserRepository userRepository;
-        @Autowired
-        private GoogleAuthService googleAuthService;
 
         private boolean isValidEmail(String email) {
                 return email != null &&
@@ -146,109 +134,11 @@ public class AuthController {
 
                 userRepository.save(dbUser);
 
-                String token = jwtUtil.generateToken(dbUser.getEmail());
-
-                Map<String, Object> userData = new java.util.HashMap<>();
-                userData.put("id", dbUser.getId());
-                userData.put("name", dbUser.getName());
-                userData.put("email", dbUser.getEmail());
-
                 return Map.of(
                                 "success", true,
                                 "message", "Login Successful",
-                                "token", token,
-                                "user", userData);
+                                "userId", dbUser.getId(),
+                                "name", dbUser.getName(),
+                                "email", dbUser.getEmail());
         }
-
-        @PostMapping("/google")
-        public Map<String, Object> googleLogin(
-                        @RequestBody GoogleLoginRequest request) {
-
-                try {
-
-                        GoogleIdToken.Payload payload = googleAuthService.verifyToken(
-                                        request.getIdToken());
-
-                        String googleId = payload.getSubject();
-
-                        String email = payload.getEmail();
-
-                        String name = (String) payload.get("name");
-
-                        String image = (String) payload.get("picture");
-
-                        User user = userRepository.findByGoogleId(googleId);
-
-                        // Existing google user nahi mila
-                        if (user == null) {
-
-                                user = userRepository.findByEmailIgnoreCase(email);
-
-                                if (user == null) {
-
-                                        user = new User();
-
-                                        user.setEmail(email);
-                                        user.setName(name);
-
-                                        user.setAccountStatus("ACTIVE");
-                                        user.setCreatedAt(
-                                                        LocalDateTime.now());
-
-                                }
-
-                                user.setGoogleId(googleId);
-                                user.setImageUrl(image);
-
-                                userRepository.save(user);
-
-                        }
-
-                        user.setLastLogin(
-                                        LocalDateTime.now());
-
-                        userRepository.save(user);
-
-                        String token = jwtUtil.generateToken(
-                                        user.getEmail());
-
-                        Map<String, Object> userData = new HashMap<>();
-
-                        userData.put(
-                                        "id",
-                                        user.getId());
-
-                        userData.put(
-                                        "name",
-                                        user.getName());
-
-                        userData.put(
-                                        "email",
-                                        user.getEmail());
-
-                        return Map.of(
-                                        "success",
-                                        true,
-
-                                        "message",
-                                        "Google Login Successful",
-
-                                        "token",
-                                        token,
-
-                                        "user",
-                                        userData);
-
-                } catch (Exception e) {
-
-                        return Map.of(
-                                        "success",
-                                        false,
-
-                                        "message",
-                                        "Invalid Google Token");
-
-                }
-
-        }
-}
+} 
