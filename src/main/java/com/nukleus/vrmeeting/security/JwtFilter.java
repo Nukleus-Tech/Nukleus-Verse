@@ -30,17 +30,21 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
-        // Login API ko skip
+        // Login API ko 
         if (
         path.equals("/api/admin/login") ||
         path.equals("/api/auth/login") ||
         path.equals("/api/auth/register") ||
-        path.equals("/api/auth/google")
+        path.equals("/api/auth/google") ||
+        path.startsWith("/api/meeting") ||
+        path.startsWith("/api/avatar") ||
+        path.startsWith("/api/storage")
 ) {
 
     filterChain.doFilter(request, response);
     return;
 }
+        
 
        
 

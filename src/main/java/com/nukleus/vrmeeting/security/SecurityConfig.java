@@ -40,27 +40,31 @@ public class SecurityConfig {
             )
 
 
-            .authorizeHttpRequests(auth -> auth
+           .authorizeHttpRequests(auth -> auth
 
-                    // Public API
-
-                    .requestMatchers(
-                            "/api/admin/login"
-                    )
-                    .permitAll()
-
-
-                    // Admin APIs
-
-                    .requestMatchers(
-                            "/api/admin/**"
-                    )
-                    .authenticated()
+        // Public APIs
+        .requestMatchers(
+                "/api/admin/login",
+                "/api/auth/login",
+                "/api/auth/register",
+                "/api/auth/google",
+                "/api/meeting/**",
+                "/api/avatar/**",
+                "/api/storage/**"
+        )
+        .permitAll()
 
 
-                    .anyRequest()
-                    .permitAll()
-            )
+        // Admin APIs
+        .requestMatchers(
+                "/api/admin/**"
+        )
+        .authenticated()
+
+
+        .anyRequest()
+        .permitAll()
+)
 
 
             .addFilterBefore(
