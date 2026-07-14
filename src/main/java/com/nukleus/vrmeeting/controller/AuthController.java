@@ -2,6 +2,8 @@ package com.nukleus.vrmeeting.controller;
 
 import com.nukleus.vrmeeting.model.User;
 import com.nukleus.vrmeeting.repository.UserRepository;
+import com.nukleus.vrmeeting.security.JwtUtil;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,6 +13,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+        @Autowired
+        private JwtUtil jwtUtil;
 
         @Autowired
         private UserRepository userRepository;
@@ -134,11 +138,17 @@ public class AuthController {
 
                 userRepository.save(dbUser);
 
+                String token = jwtUtil.generateToken(dbUser.getEmail());
+
+                Map<String, Object> userData = new java.util.HashMap<>();
+                userData.put("id", dbUser.getId());
+                userData.put("name", dbUser.getName());
+                userData.put("email", dbUser.getEmail());
+
                 return Map.of(
                                 "success", true,
                                 "message", "Login Successful",
-                                "userId", dbUser.getId(),
-                                "name", dbUser.getName(),
-                                "email", dbUser.getEmail());
+                                "token", token,
+                                "user", userData);
         }
 }
