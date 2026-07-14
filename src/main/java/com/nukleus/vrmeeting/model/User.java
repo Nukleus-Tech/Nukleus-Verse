@@ -37,37 +37,30 @@ public class User {
 
     private String meshyTaskId;
 
-
     // Current active meeting
     @Column(length = 100)
     private String currentMeetingId;
 
-
     // Admin Users Module Fields
-
-    
-
 
     @Column(length = 20)
     private String accountStatus;
 
-
     @Column(name = "created_at")
     private LocalDateTime createdAt;
-
 
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
+    @Column(unique = true)
+    private String googleId;
 
     public User() {
     }
 
-
     public Long getId() {
         return id;
     }
-
 
     public String getName() {
         return name;
@@ -77,7 +70,6 @@ public class User {
         this.name = name;
     }
 
-
     public String getEmail() {
         return email;
     }
@@ -85,7 +77,6 @@ public class User {
     public void setEmail(String email) {
         this.email = email;
     }
-
 
     public String getPassword() {
         return password;
@@ -95,7 +86,6 @@ public class User {
         this.password = password;
     }
 
-
     public String getImageUrl() {
         return imageUrl;
     }
@@ -103,7 +93,6 @@ public class User {
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }
-
 
     public String getAvatarUrl() {
         return avatarUrl;
@@ -113,7 +102,6 @@ public class User {
         this.avatarUrl = avatarUrl;
     }
 
-
     public String getRiggedGlbUrl() {
         return riggedGlbUrl;
     }
@@ -121,7 +109,6 @@ public class User {
     public void setRiggedGlbUrl(String riggedGlbUrl) {
         this.riggedGlbUrl = riggedGlbUrl;
     }
-
 
     public String getWalkingGlbUrl() {
         return walkingGlbUrl;
@@ -131,7 +118,6 @@ public class User {
         this.walkingGlbUrl = walkingGlbUrl;
     }
 
-
     public String getIdleGlbUrl() {
         return idleGlbUrl;
     }
@@ -139,7 +125,6 @@ public class User {
     public void setIdleGlbUrl(String idleGlbUrl) {
         this.idleGlbUrl = idleGlbUrl;
     }
-
 
     public String getAvatarStatus() {
         return avatarStatus;
@@ -149,7 +134,6 @@ public class User {
         this.avatarStatus = avatarStatus;
     }
 
-
     public String getMeshyTaskId() {
         return meshyTaskId;
     }
@@ -157,7 +141,6 @@ public class User {
     public void setMeshyTaskId(String meshyTaskId) {
         this.meshyTaskId = meshyTaskId;
     }
-
 
     public String getCurrentMeetingId() {
         return currentMeetingId;
@@ -167,11 +150,7 @@ public class User {
         this.currentMeetingId = currentMeetingId;
     }
 
-
     // Role
-
-    
-
 
     // Account Status
 
@@ -183,7 +162,6 @@ public class User {
         this.accountStatus = accountStatus;
     }
 
-
     // Created At
 
     public LocalDateTime getCreatedAt() {
@@ -194,7 +172,6 @@ public class User {
         this.createdAt = createdAt;
     }
 
-
     // Last Login
 
     public LocalDateTime getLastLogin() {
@@ -203,5 +180,13 @@ public class User {
 
     public void setLastLogin(LocalDateTime lastLogin) {
         this.lastLogin = lastLogin;
+    }
+
+    public String getGoogleId() {
+        return googleId;
+    }
+
+    public void setGoogleId(String googleId) {
+        this.googleId = googleId;
     }
 }
