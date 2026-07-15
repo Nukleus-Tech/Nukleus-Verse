@@ -49,6 +49,7 @@ public class AvatarController {
         user.setWalkingGlbUrl(avatarData.getWalkingGlbUrl());
         // user.setRunningGlbUrl(avatarData.getRunningGlbUrl());
         user.setIdleGlbUrl(avatarData.getIdleGlbUrl());
+        user.setSittingGlbUrl(avatarData.getSittingGlbUrl());
         user.setAvatarStatus(avatarData.getAvatarStatus());
         user.setMeshyTaskId(avatarData.getMeshyTaskId());
 
@@ -93,6 +94,7 @@ public class AvatarController {
         response.put("walkingGlbUrl", user.getWalkingGlbUrl());
         // response.put("runningGlbUrl", user.getRunningGlbUrl());
         response.put("idleGlbUrl", user.getIdleGlbUrl());
+        response.put("sittingGlbUrl", user.getSittingGlbUrl());
         response.put("avatarStatus", user.getAvatarStatus());
         response.put("meshyTaskId", user.getMeshyTaskId());
 
