@@ -1,5 +1,7 @@
 package com.nukleus.vrmeeting.controller;
 
+import java.time.LocalDateTime;
+
 import com.nukleus.vrmeeting.model.User;
 import com.nukleus.vrmeeting.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,10 @@ public class AvatarController {
         if (user == null) {
             user = new User();
             user.setEmail(email);
+            
+
+            user.setAccountStatus("ACTIVE");
+            user.setCreatedAt(LocalDateTime.now());
         }
 
         if (avatarData.getName() != null && !avatarData.getName().trim().isEmpty()) {
