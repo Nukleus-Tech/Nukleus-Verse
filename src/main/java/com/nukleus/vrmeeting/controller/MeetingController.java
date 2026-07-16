@@ -47,6 +47,21 @@ public class MeetingController {
         if (hostUser == null) {
             return Map.of("success", false, "message", "Host user not found");
         }
+        Meeting oldMeeting = meetingRepository.findByHostEmailIgnoreCaseAndStatus(
+                hostEmail,
+                "ACTIVE");
+
+        if (oldMeeting != null) {
+
+            oldMeeting.setStatus("ENDED");
+            oldMeeting.setEndedAt(LocalDateTime.now());
+
+            meetingRepository.save(oldMeeting);
+
+            System.out.println(
+                    "Old meeting ended: "
+                            + oldMeeting.getMeetingId());
+        }
 
         Meeting activeMeeting = meetingRepository.findByRoomCodeAndStatus(roomCode, "ACTIVE");
 
@@ -67,9 +82,13 @@ public class MeetingController {
         meeting.setRecordingStatus("NOT_STARTED");
         meeting.setCreatedAt(LocalDateTime.now());
 
-        meetingRepository.save(meeting);
+        // meetingRepository.save(meeting);
 
-        hostUser.setCurrentMeetingId(meeting.getMeetingId());
+        // hostUser.setCurrentMeetingId(meeting.getMeetingId());
+        // userRepository.save(hostUser);
+        Meeting savedMeeting = meetingRepository.save(meeting);
+
+        hostUser.setCurrentMeetingId(savedMeeting.getMeetingId());
         userRepository.save(hostUser);
 
         Map<String, Object> response = new HashMap<>();
