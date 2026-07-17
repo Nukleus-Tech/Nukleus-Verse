@@ -402,7 +402,17 @@ public class AdminController {
         @GetMapping("/meetings")
         public Map<String, Object> getAllMeetings() {
 
-                var meetings = meetingRepository.findAll();
+                List<Meeting> meetings = meetingRepository.findAll();
+
+                meetings.sort(
+                                Comparator
+                                                .comparing(
+                                                                (Meeting m) -> "ACTIVE".equalsIgnoreCase(m.getStatus())
+                                                                                ? 0
+                                                                                : 1)
+                                                .thenComparing(
+                                                                Meeting::getCreatedAt,
+                                                                Comparator.nullsLast(Comparator.reverseOrder())));
 
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy hh:mm a");
 
@@ -459,14 +469,26 @@ public class AdminController {
                                                 long seconds = Duration.between(
                                                                 m.getCreatedAt(),
                                                                 m.getEndedAt()).getSeconds();
-
                                                 long minutes = seconds / 60;
 
                                                 if (minutes <= 0) {
                                                         duration = "Less than 1 min";
-                                                } else {
+                                                } else if (minutes < 60) {
                                                         duration = minutes + " min";
+                                                } else {
+                                                        long hours = minutes / 60;
+                                                        long remainingMinutes = minutes % 60;
+
+                                                        if (remainingMinutes == 0) {
+                                                                duration = hours + (hours == 1 ? " hour" : " hours");
+                                                        } else {
+                                                                duration = hours
+                                                                                + (hours == 1 ? " hour " : " hours ")
+                                                                                + remainingMinutes
+                                                                                + " min";
+                                                        }
                                                 }
+
                                         }
 
                                         data.put(
@@ -568,19 +590,44 @@ public class AdminController {
                                 .count();
 
                 // Recent Meetings
-                List<Map<String, Object>> recentMeetings = meetingRepository.findTop5ByOrderByCreatedAtDesc()
-                                .stream()
+                List<Meeting> dashboardMeetings = meetings;
+                
+
+                dashboardMeetings.sort(
+                                Comparator
+                                                .comparing(
+                                                                (Meeting m) -> "ACTIVE".equalsIgnoreCase(m.getStatus())
+                                                                                ? 0
+                                                                                : 1)
+                                                .thenComparing(
+                                                                Meeting::getCreatedAt,
+                                                                Comparator.nullsLast(Comparator.reverseOrder())));
+
+                List<Map<String, Object>> recentMeetings = dashboardMeetings.stream()
+                                .limit(5)
                                 .map(m -> {
 
-                                        Map<String, Object> data = new java.util.HashMap<>();
+                                        Map<String, Object> data = new HashMap<>();
 
                                         data.put(
                                                         "meetingName",
                                                         m.getMeetingName() != null
                                                                         ? m.getMeetingName()
                                                                         : "Untitled Meeting");
-                                        data.put("hostEmail", m.getHostEmail());
-                                        data.put("status", m.getStatus());
+
+                                        data.put(
+                                                        "hostEmail",
+                                                        m.getHostEmail());
+
+                                        String status = m.getStatus();
+
+                                        if ("ACTIVE".equalsIgnoreCase(status)) {
+                                                status = "LIVE";
+                                        } else if ("ENDED".equalsIgnoreCase(status)) {
+                                                status = "COMPLETED";
+                                        }
+
+                                        data.put("status", status);
 
                                         return data;
 
@@ -648,13 +695,21 @@ public class AdminController {
                                                 long minutes = seconds / 60;
 
                                                 if (minutes <= 0) {
-
                                                         duration = "Less than 1 min";
-
-                                                } else {
-
+                                                } else if (minutes < 60) {
                                                         duration = minutes + " min";
+                                                } else {
+                                                        long hours = minutes / 60;
+                                                        long remainingMinutes = minutes % 60;
 
+                                                        if (remainingMinutes == 0) {
+                                                                duration = hours + (hours == 1 ? " hour" : " hours");
+                                                        } else {
+                                                                duration = hours
+                                                                                + (hours == 1 ? " hour " : " hours ")
+                                                                                + remainingMinutes
+                                                                                + " min";
+                                                        }
                                                 }
                                         }
 
@@ -906,17 +961,24 @@ public class AdminController {
                         long seconds = Duration.between(
                                         meeting.getCreatedAt(),
                                         meeting.getEndedAt()).getSeconds();
-
                         long minutes = seconds / 60;
 
                         if (minutes <= 0) {
-
                                 duration = "Less than 1 min";
-
-                        } else {
-
+                        } else if (minutes < 60) {
                                 duration = minutes + " min";
+                        } else {
+                                long hours = minutes / 60;
+                                long remainingMinutes = minutes % 60;
 
+                                if (remainingMinutes == 0) {
+                                        duration = hours + (hours == 1 ? " hour" : " hours");
+                                } else {
+                                        duration = hours
+                                                        + (hours == 1 ? " hour " : " hours ")
+                                                        + remainingMinutes
+                                                        + " min";
+                                }
                         }
 
                 }
