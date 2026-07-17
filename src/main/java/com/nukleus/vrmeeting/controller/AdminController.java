@@ -531,7 +531,7 @@ public class AdminController {
                                                         recordingStatus);
                                         // AI Summary Status
                                         
-                                        String summaryStatus = "NOT_STARTED";
+                                        String summaryStatus = "NOT_AVAILABLE";
 
                                         data.put(
                                                         "summary",
