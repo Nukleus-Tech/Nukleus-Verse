@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.time.ZoneId;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -63,7 +64,8 @@ public class AuthController {
                 // Admin Users Module fields
 
                 user.setAccountStatus("ACTIVE");
-                user.setCreatedAt(LocalDateTime.now());
+                user.setCreatedAt(
+                                LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
 
                 userRepository.save(user);
 
@@ -130,7 +132,8 @@ public class AuthController {
                 }
 
                 // Update last login
-                dbUser.setLastLogin(LocalDateTime.now());
+                dbUser.setLastLogin(
+                                LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
 
                 userRepository.save(dbUser);
 
@@ -141,4 +144,4 @@ public class AuthController {
                                 "name", dbUser.getName(),
                                 "email", dbUser.getEmail());
         }
-} 
+}

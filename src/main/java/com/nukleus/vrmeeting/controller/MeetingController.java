@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.time.ZoneId;
 
 @RestController
 @RequestMapping("/api/meeting")
@@ -54,7 +55,7 @@ public class MeetingController {
         if (oldMeeting != null) {
 
             oldMeeting.setStatus("ENDED");
-            oldMeeting.setEndedAt(LocalDateTime.now());
+            oldMeeting.setEndedAt(LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
 
             meetingRepository.save(oldMeeting);
 
@@ -80,7 +81,8 @@ public class MeetingController {
 
         meeting.setStatus("ACTIVE");
         meeting.setRecordingStatus("NOT_STARTED");
-        meeting.setCreatedAt(LocalDateTime.now());
+        meeting.setCreatedAt(
+                        LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
 
         // meetingRepository.save(meeting);
 
@@ -167,7 +169,7 @@ public class MeetingController {
         }
 
         meeting.setStatus("ENDED");
-        meeting.setEndedAt(LocalDateTime.now());
+        meeting.setEndedAt(LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
         meeting.setRecordingStatus("PROCESSING");
 
         if (request.getRecordingUrl() != null) {

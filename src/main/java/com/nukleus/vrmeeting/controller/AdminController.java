@@ -19,6 +19,7 @@ import java.util.Comparator;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDate;
+import java.time.ZoneId;
 // import java.util.HashSet;
 // import java.util.Set;
 
@@ -98,8 +99,9 @@ public class AdminController {
                                 .filter(u -> "BLOCKED".equalsIgnoreCase(u.getAccountStatus()))
                                 .count();
 
-                LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
-
+                LocalDateTime oneWeekAgo = LocalDateTime
+                                .now(ZoneId.of("Asia/Kolkata"))
+                                .minusDays(7);
                 long newThisWeek = users.stream()
                                 .filter(u -> u.getCreatedAt() != null
                                                 &&

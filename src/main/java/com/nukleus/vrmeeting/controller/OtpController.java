@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Random;
+import java.time.ZoneId;
 
 @RestController
 @RequestMapping("/api/otp")
@@ -51,7 +52,7 @@ public class OtpController {
         EmailOtp emailOtp = new EmailOtp();
         emailOtp.setEmail(email);
         emailOtp.setOtp(otp);
-        emailOtp.setExpiryTime(LocalDateTime.now().plusMinutes(5));
+        emailOtp.setExpiryTime(LocalDateTime.now(ZoneId.of("Asia/Kolkata")).plusMinutes(5));
 
         emailOtpRepository.save(emailOtp);
 
@@ -87,7 +88,7 @@ public class OtpController {
             return Map.of("success", false, "message", "OTP not found");
         }
 
-        if (LocalDateTime.now().isAfter(savedOtp.getExpiryTime())) {
+        if (LocalDateTime.now(ZoneId.of("Asia/Kolkata")).isAfter(savedOtp.getExpiryTime())) {
             emailOtpRepository.deleteByEmail(email);
             return Map.of("success", false, "message", "OTP expired");
         }

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.time.ZoneId;
 
 @RestController
 @RequestMapping("/api/avatar")
@@ -38,7 +39,8 @@ public class AvatarController {
             
 
             user.setAccountStatus("ACTIVE");
-            user.setCreatedAt(LocalDateTime.now());
+            user.setCreatedAt(
+                            LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
         }
 
         if (avatarData.getName() != null && !avatarData.getName().trim().isEmpty()) {
