@@ -530,16 +530,12 @@ public class AdminController {
                                                         "recording",
                                                         recordingStatus);
                                         // AI Summary Status
-                                        String summaryStatus;
+                                        
+                                        String summaryStatus = "NOT_STARTED";
 
-                                        if (m.getPdfUrl() != null &&
-                                                        !m.getPdfUrl().isEmpty()) {
-                                                summaryStatus = "READY";
-                                        } else if ("ENDED".equalsIgnoreCase(m.getStatus())) {
-                                                summaryStatus = "GENERATING";
-                                        } else {
-                                                summaryStatus = "NOT_STARTED";
-                                        }
+                                        data.put(
+                                                        "summary",
+                                                        summaryStatus);
 
                                         data.put(
                                                         "summary",
@@ -591,7 +587,6 @@ public class AdminController {
 
                 // Recent Meetings
                 List<Meeting> dashboardMeetings = meetings;
-                
 
                 dashboardMeetings.sort(
                                 Comparator
