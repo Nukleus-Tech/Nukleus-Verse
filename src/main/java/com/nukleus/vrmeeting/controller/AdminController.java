@@ -404,6 +404,28 @@ public class AdminController {
 
                 List<Meeting> meetings = meetingRepository.findAll();
 
+                long totalMeetings = meetings.size();
+
+                long liveMeetings = meetings.stream()
+                                .filter(m -> "ACTIVE".equalsIgnoreCase(m.getStatus()))
+                                .count();
+
+                long completedMeetings = meetings.stream()
+                                .filter(m -> "ENDED".equalsIgnoreCase(m.getStatus()))
+                                .count();
+
+                ZoneId indiaZone = ZoneId.of("Asia/Kolkata");
+
+                LocalDate today = LocalDate.now(indiaZone);
+
+                long todayMeetings = meetings.stream()
+                                .filter(m -> m.getCreatedAt() != null &&
+                                                m.getCreatedAt()
+                                                                
+                                                                .toLocalDate()
+                                                                .equals(today))
+                                .count();
+
                 meetings.sort(
                                 Comparator
                                                 .comparing(
@@ -530,7 +552,7 @@ public class AdminController {
                                                         "recording",
                                                         recordingStatus);
                                         // AI Summary Status
-                                        
+
                                         String summaryStatus = "NOT_AVAILABLE";
 
                                         data.put(
@@ -545,16 +567,20 @@ public class AdminController {
 
                                 })
                                 .collect(Collectors.toList());
-
                 return Map.of(
-
                                 "success",
                                 true,
 
-                                "meetings",
-                                meetingList
+                                "cards",
+                                Map.of(
+                                                "totalMeetings", totalMeetings,
+                                                "liveMeetings", liveMeetings,
+                                                "completedMeetings", completedMeetings,
+                                                "todayMeetings", todayMeetings),
 
-                );
+                                "meetings",
+                                meetingList);
+
         }
 
         @GetMapping("/dashboard")
