@@ -413,18 +413,8 @@ public class AdminController {
                 long completedMeetings = meetings.stream()
                                 .filter(m -> "ENDED".equalsIgnoreCase(m.getStatus()))
                                 .count();
+                                long todayMeetings = meetingRepository.countTodayMeetings();
 
-                ZoneId indiaZone = ZoneId.of("Asia/Kolkata");
-
-                LocalDate today = LocalDate.now(indiaZone);
-
-                long todayMeetings = meetings.stream()
-                                .filter(m -> m.getCreatedAt() != null &&
-                                                m.getCreatedAt()
-                                                                
-                                                                .toLocalDate()
-                                                                .equals(today))
-                                .count();
 
                 meetings.sort(
                                 Comparator

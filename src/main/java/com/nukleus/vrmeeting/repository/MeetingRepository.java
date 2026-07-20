@@ -2,6 +2,7 @@ package com.nukleus.vrmeeting.repository;
 
 import com.nukleus.vrmeeting.model.Meeting;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface MeetingRepository extends JpaRepository<Meeting, Long> {
@@ -18,4 +19,11 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
             String hostEmail,
             String status
     );
+
+    @Query(value = """
+            SELECT COUNT(*)
+            FROM meetings
+            WHERE DATE(created_at) = CURRENT_DATE
+            """, nativeQuery = true)
+    long countTodayMeetings();
 }
