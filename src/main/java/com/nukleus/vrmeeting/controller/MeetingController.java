@@ -82,7 +82,7 @@ public class MeetingController {
         meeting.setStatus("ACTIVE");
         meeting.setRecordingStatus("NOT_STARTED");
         meeting.setCreatedAt(
-                        LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
+                LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
 
         // meetingRepository.save(meeting);
 
@@ -137,6 +137,17 @@ public class MeetingController {
         if (user == null) {
             return Map.of("success", false, "message", "User not found");
         }
+        String participants = meeting.getParticipantEmails();
+
+        if (participants == null || participants.trim().isEmpty()) {
+            meeting.setParticipantEmails(userEmail);
+        } else {
+            meeting.setParticipantEmails(
+                    participants + "," + userEmail);
+
+        }
+
+        meetingRepository.save(meeting);
 
         user.setCurrentMeetingId(meeting.getMeetingId());
         userRepository.save(user);

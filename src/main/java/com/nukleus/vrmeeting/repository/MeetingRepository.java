@@ -23,7 +23,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
     @Query(value = """
             SELECT COUNT(*)
             FROM meetings
-            WHERE DATE(created_at) = CURRENT_DATE
+            WHERE DATE(created_at AT TIME ZONE 'Asia/Kolkata') = CURRENT_DATE
             """, nativeQuery = true)
     long countTodayMeetings();
 }
