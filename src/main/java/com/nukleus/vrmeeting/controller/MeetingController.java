@@ -160,6 +160,8 @@ public class MeetingController {
         response.put("meetingName", meeting.getMeetingName());
         response.put("userEmail", user.getEmail());
         response.put("status", meeting.getStatus());
+        response.put("pdfUrl", meeting.getPdfUrl());
+        response.put("pptUrl", meeting.getPptUrl());
 
         return response;
     }
