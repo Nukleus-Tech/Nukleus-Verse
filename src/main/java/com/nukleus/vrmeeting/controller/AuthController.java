@@ -66,6 +66,12 @@ public class AuthController {
                 user.setAccountStatus("ACTIVE");
                 user.setCreatedAt(
                                 LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
+                                
+                                user.setLastLogin(
+                                LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
+
+
+
 
                 userRepository.save(user);
 

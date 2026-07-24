@@ -44,10 +44,14 @@ public class MeetingController {
         }
 
         User hostUser = userRepository.findByEmailIgnoreCase(hostEmail);
+        
 
         if (hostUser == null) {
             return Map.of("success", false, "message", "Host user not found");
         }
+
+
+
         Meeting oldMeeting = meetingRepository.findByHostEmailIgnoreCaseAndStatus(
                 hostEmail,
                 "ACTIVE");
@@ -63,6 +67,12 @@ public class MeetingController {
                     "Old meeting ended: "
                             + oldMeeting.getMeetingId());
         }
+         
+   
+        
+        
+
+        
 
         Meeting activeMeeting = meetingRepository.findByRoomCodeAndStatus(roomCode, "ACTIVE");
 
@@ -70,6 +80,8 @@ public class MeetingController {
             return Map.of("success", false, "message", "This room code is already in use");
         }
 
+
+           //create new meeting
         Meeting meeting = new Meeting();
         meeting.setMeetingId(UUID.randomUUID().toString());
         meeting.setRoomCode(roomCode);

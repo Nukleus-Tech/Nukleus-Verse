@@ -49,6 +49,9 @@ public class User {
     @Column(length = 20)
     private String accountStatus;
 
+
+
+    
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
