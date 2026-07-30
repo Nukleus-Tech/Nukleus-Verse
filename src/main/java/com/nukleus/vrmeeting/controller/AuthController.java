@@ -14,7 +14,8 @@ import java.time.ZoneId;
 public class AuthController {
 
         @Autowired
-        private UserRepository userRepository;
+        private  UserRepository userRepository;
+       
 
         private boolean isValidEmail(String email) {
                 return email != null &&
@@ -66,7 +67,7 @@ public class AuthController {
                 user.setAccountStatus("ACTIVE");
                 user.setCreatedAt(
                                 LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
-                                
+
                                 user.setLastLogin(
                                 LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
 
