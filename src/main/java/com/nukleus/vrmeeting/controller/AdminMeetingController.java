@@ -2,11 +2,12 @@ package com.nukleus.vrmeeting.controller;
 
 import com.nukleus.vrmeeting.model.Meeting;
 import com.nukleus.vrmeeting.repository.MeetingRepository;
+import com.nukleus.vrmeeting.service.GoogleCloudStorageService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+//import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
+//import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -14,8 +15,8 @@ import java.time.format.DateTimeFormatter;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import org.springframework.http.*;
-import org.springframework.web.client.RestTemplate;
+//import org.springframework.http.*;
+//import org.springframework.web.client.RestTemplate;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -24,6 +25,8 @@ public class AdminMeetingController {
 
         @Autowired
         private MeetingRepository meetingRepository;
+        @Autowired
+private GoogleCloudStorageService storageService;
 
         // ==============================
         // Duration Helper
@@ -365,35 +368,43 @@ public class AdminMeetingController {
         // ==============================
 
         @GetMapping("/meetings/{meetingId}/pdf/download")
-        public ResponseEntity<?> downloadPdf(
+        public Map<String, Object> downloadPdf(
                         @PathVariable String meetingId) {
 
                 Meeting meeting = meetingRepository.findByMeetingId(meetingId);
 
                 if (meeting == null) {
 
-                        return ResponseEntity.notFound().build();
+                        return Map.of(
+                                        "success",
+                                        false,
+                                        "message",
+                                        "Meeting not found");
                 }
 
-                if (meeting.getPdfUrl() == null ||
-                                meeting.getPdfUrl().isEmpty()) {
+                if (meeting.getPdfFileName() == null
+                                ||
+                                meeting.getPdfFileName().isEmpty()) {
 
-                        return ResponseEntity.notFound().build();
+                        return Map.of(
+                                        "success",
+                                        false,
+                                        "message",
+                                        "PDF not available");
                 }
 
-                RestTemplate restTemplate = new RestTemplate();
+                String signedUrl = storageService.generateDownloadUrl(
+                                meeting.getPdfFileName());
 
-                byte[] pdfFile = restTemplate.getForObject(
-                                meeting.getPdfUrl(),
-                                byte[].class);
+                return Map.of(
 
-                return ResponseEntity.ok()
-                                .header(
-                                                HttpHeaders.CONTENT_DISPOSITION,
-                                                "attachment; filename=\"meeting.pdf\"")
-                                .contentType(
-                                                MediaType.APPLICATION_PDF)
-                                .body(pdfFile);
+                                "success",
+                                true,
 
+                                "fileName",
+                                meeting.getPdfFileName(),
+
+                                "downloadUrl",
+                                signedUrl);
         }
 }
