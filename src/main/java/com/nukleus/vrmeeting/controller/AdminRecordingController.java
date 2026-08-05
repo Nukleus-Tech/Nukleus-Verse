@@ -197,5 +197,62 @@ public class AdminRecordingController {
         );
 
     }
+    // ==============================
+// DOWNLOAD SINGLE RECORDING
+// ==============================
+
+@GetMapping("/recordings/{meetingId}/download")
+public Map<String,Object> downloadRecording(
+        @PathVariable String meetingId) {
+
+
+    Meeting meeting =
+            meetingRepository.findByMeetingId(meetingId);
+
+
+    if(meeting == null){
+
+        return Map.of(
+                "success",
+                false,
+                "message",
+                "Meeting not found"
+        );
+    }
+
+
+    if(meeting.getRecordingUrl()==null
+            ||
+       meeting.getRecordingUrl().isEmpty()){
+
+
+        return Map.of(
+                "success",
+                false,
+                "message",
+                "Recording not available"
+        );
+    }
+
+
+
+    return Map.of(
+
+            "success",
+            true,
+
+            "fileName",
+            meeting.getRecordingFileName()!=null
+            ?
+            meeting.getRecordingFileName()
+            :
+            "recording.mp4",
+
+            "downloadUrl",
+            meeting.getRecordingUrl()
+
+    );
+
+}
 
 }
