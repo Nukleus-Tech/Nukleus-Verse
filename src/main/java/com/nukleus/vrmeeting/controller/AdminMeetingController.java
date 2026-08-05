@@ -4,7 +4,9 @@ import com.nukleus.vrmeeting.model.Meeting;
 import com.nukleus.vrmeeting.repository.MeetingRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -12,515 +14,386 @@ import java.time.format.DateTimeFormatter;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
+import org.springframework.http.*;
+import org.springframework.web.client.RestTemplate;
 
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/admin")
 public class AdminMeetingController {
 
+        @Autowired
+        private MeetingRepository meetingRepository;
 
-    @Autowired
-    private MeetingRepository meetingRepository;
+        // ==============================
+        // Duration Helper
+        // ==============================
 
+        private String calculateDuration(
+                        LocalDateTime start,
+                        LocalDateTime end) {
 
+                if (start == null || end == null) {
+                        return "Not Available";
+                }
 
-    // ==============================
-    // Duration Helper
-    // ==============================
+                long seconds = Duration.between(start, end)
+                                .getSeconds();
 
-    private String calculateDuration(
-            LocalDateTime start,
-            LocalDateTime end
-    ) {
+                long minutes = seconds / 60;
 
-        if(start == null || end == null) {
-            return "Not Available";
+                if (minutes <= 0) {
+                        return "Less than 1 min";
+                }
+
+                if (minutes < 60) {
+                        return minutes + " min";
+                }
+
+                long hours = minutes / 60;
+
+                long remainingMinutes = minutes % 60;
+
+                if (remainingMinutes == 0) {
+
+                        return hours +
+                                        (hours == 1
+                                                        ? " hour"
+                                                        : " hours");
+                }
+
+                return hours +
+                                (hours == 1
+                                                ? " hour "
+                                                : " hours ")
+                                +
+                                remainingMinutes
+                                +
+                                " min";
         }
 
+        // ==============================
+        // GET ALL MEETINGS
+        // ==============================
 
-        long seconds =
-                Duration.between(start,end)
-                        .getSeconds();
+        @GetMapping("/meetings")
+        public Map<String, Object> getAllMeetings() {
 
+                List<Meeting> meetings = meetingRepository.findAll();
 
-        long minutes = seconds / 60;
+                long totalMeetings = meetings.size();
 
+                long liveMeetings = meetings.stream()
+                                .filter(m -> "ACTIVE"
+                                                .equalsIgnoreCase(
+                                                                m.getStatus()))
+                                .count();
 
-        if(minutes <= 0) {
-            return "Less than 1 min";
-        }
+                long completedMeetings = meetings.stream()
+                                .filter(m -> "ENDED"
+                                                .equalsIgnoreCase(
+                                                                m.getStatus()))
+                                .count();
 
+                long todayMeetings = meetingRepository
+                                .countTodayMeetings();
 
-        if(minutes < 60) {
-            return minutes + " min";
-        }
+                meetings.sort(
+                                Comparator
+                                                .comparing(
+                                                                (Meeting m) -> "ACTIVE"
+                                                                                .equalsIgnoreCase(
+                                                                                                m.getStatus())
+                                                                                                                ? 0
+                                                                                                                : 1)
+                                                .thenComparing(
+                                                                Meeting::getCreatedAt,
+                                                                Comparator.nullsLast(
+                                                                                Comparator.reverseOrder())));
 
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(
+                                "dd MMM yyyy hh:mm a");
 
-        long hours = minutes / 60;
+                List<Map<String, Object>> meetingList = meetings.stream()
+                                .map(m -> {
 
-        long remainingMinutes =
-                minutes % 60;
+                                        Map<String, Object> data = new HashMap<>();
 
+                                        data.put(
+                                                        "meetingId",
+                                                        m.getMeetingId());
 
-        if(remainingMinutes == 0) {
+                                        data.put(
+                                                        "meetingName",
+                                                        m.getMeetingName() != null
+                                                                        ? m.getMeetingName()
+                                                                        : "Untitled Meeting");
 
-            return hours +
-                    (hours == 1
-                    ? " hour"
-                    : " hours");
-        }
+                                        data.put(
+                                                        "hostEmail",
+                                                        m.getHostEmail());
 
+                                        // Participants Count
 
-        return hours +
-                (hours == 1
-                ? " hour "
-                : " hours ")
-                +
-                remainingMinutes
-                +
-                " min";
-    }
+                                        int participants = 0;
 
+                                        if (m.getParticipantEmails() != null
+                                                        &&
+                                                        !m.getParticipantEmails()
+                                                                        .trim()
+                                                                        .isEmpty()) {
 
+                                                participants = m.getParticipantEmails()
+                                                                .split(",").length;
+                                        }
 
+                                        data.put(
+                                                        "participants",
+                                                        participants);
 
-    // ==============================
-    // GET ALL MEETINGS
-    // ==============================
+                                        data.put(
+                                                        "started",
+                                                        m.getCreatedAt() != null
+                                                                        ? m.getCreatedAt()
+                                                                                        .format(formatter)
+                                                                        : "Not Available");
 
+                                        data.put(
+                                                        "duration",
+                                                        calculateDuration(
+                                                                        m.getCreatedAt(),
+                                                                        m.getEndedAt()));
 
-    @GetMapping("/meetings")
-    public Map<String,Object> getAllMeetings() {
+                                        String status = m.getStatus();
 
+                                        if ("ACTIVE"
+                                                        .equalsIgnoreCase(status)) {
 
-        List<Meeting> meetings =
-                meetingRepository.findAll();
+                                                status = "LIVE";
 
+                                        } else if ("ENDED"
+                                                        .equalsIgnoreCase(status)) {
 
+                                                status = "COMPLETED";
+                                        }
 
-        long totalMeetings =
-                meetings.size();
+                                        data.put(
+                                                        "status",
+                                                        status);
 
+                                        String recordingStatus;
 
+                                        if (m.getRecordingUrl() != null
+                                                        &&
+                                                        !m.getRecordingUrl()
+                                                                        .isEmpty()) {
 
-        long liveMeetings =
-                meetings.stream()
-                        .filter(m ->
-                                "ACTIVE"
-                                .equalsIgnoreCase(
-                                        m.getStatus()))
-                        .count();
+                                                recordingStatus = "AVAILABLE";
 
+                                        } else if ("ENDED"
+                                                        .equalsIgnoreCase(
+                                                                        m.getStatus())) {
 
+                                                recordingStatus = "PROCESSING";
 
-        long completedMeetings =
-                meetings.stream()
-                        .filter(m ->
-                                "ENDED"
-                                .equalsIgnoreCase(
-                                        m.getStatus()))
-                        .count();
+                                        } else {
 
+                                                recordingStatus = "NOT_STARTED";
+                                        }
 
+                                        data.put(
+                                                        "recording",
+                                                        recordingStatus);
 
-        long todayMeetings =
-                meetingRepository
-                        .countTodayMeetings();
+                                        data.put(
+                                                        "summary",
+                                                        "NOT_AVAILABLE");
 
+                                        return data;
 
+                                })
+                                .collect(Collectors.toList());
 
-        meetings.sort(
-                Comparator
-                .comparing(
-                        (Meeting m) ->
-                                "ACTIVE"
-                                .equalsIgnoreCase(
-                                        m.getStatus())
-                                ? 0 : 1
-                )
-                .thenComparing(
-                        Meeting::getCreatedAt,
-                        Comparator.nullsLast(
-                                Comparator.reverseOrder()
-                        )
-                )
-        );
+                return Map.of(
 
+                                "success",
+                                true,
 
+                                "cards",
+                                Map.of(
+                                                "totalMeetings",
+                                                totalMeetings,
 
-        DateTimeFormatter formatter =
-                DateTimeFormatter.ofPattern(
-                        "dd MMM yyyy hh:mm a"
+                                                "liveMeetings",
+                                                liveMeetings,
+
+                                                "completedMeetings",
+                                                completedMeetings,
+
+                                                "todayMeetings",
+                                                todayMeetings),
+
+                                "meetings",
+                                meetingList
+
                 );
 
+        }
 
+        // ==============================
+        // GET SINGLE MEETING DETAILS
+        // ==============================
 
-        List<Map<String,Object>> meetingList =
-                meetings.stream()
-                .map(m -> {
+        @GetMapping("/meetings/{meetingId}")
+        public Map<String, Object> getMeetingDetails(
+                        @PathVariable String meetingId) {
 
+                Meeting meeting = meetingRepository
+                                .findByMeetingId(meetingId);
 
-                    Map<String,Object> data =
-                            new HashMap<>();
+                if (meeting == null) {
 
+                        return Map.of(
+                                        "success",
+                                        false,
+                                        "message",
+                                        "Meeting not found");
+                }
 
-                    data.put(
-                            "meetingId",
-                            m.getMeetingId()
-                    );
+                Map<String, Object> data = new HashMap<>();
 
+                data.put(
+                                "meetingId",
+                                meeting.getMeetingId());
 
-                    data.put(
-                            "meetingName",
-                            m.getMeetingName()!=null
-                            ?
-                            m.getMeetingName()
-                            :
-                            "Untitled Meeting"
-                    );
+                data.put(
+                                "meetingName",
+                                meeting.getMeetingName());
 
+                data.put(
+                                "hostEmail",
+                                meeting.getHostEmail());
 
-                    data.put(
-                            "hostEmail",
-                            m.getHostEmail()
-                    );
+                data.put(
+                                "roomCode",
+                                meeting.getRoomCode());
 
+                int participants = 0;
 
+                List<String> participantList = new ArrayList<>();
 
-                    // Participants Count
+                if (meeting.getParticipantEmails() != null
+                                &&
+                                !meeting.getParticipantEmails()
+                                                .trim()
+                                                .isEmpty()) {
 
-                    int participants = 0;
+                        participantList = Arrays.stream(
+                                        meeting.getParticipantEmails()
+                                                        .split(","))
+                                        .map(String::trim)
+                                        .filter(e -> !e.isEmpty())
+                                        .collect(Collectors.toList());
 
+                        participants = participantList.size();
+                }
 
-                    if(m.getParticipantEmails()!=null
-                    &&
-                    !m.getParticipantEmails()
-                            .trim()
-                            .isEmpty()) {
+                data.put(
+                                "participants",
+                                participants);
 
+                data.put(
+                                "participantEmails",
+                                participantList);
 
-                        participants =
-                                m.getParticipantEmails()
-                                .split(",")
-                                .length;
-                    }
+                String status = meeting.getStatus();
 
-
-                    data.put(
-                            "participants",
-                            participants
-                    );
-
-
-
-                    data.put(
-                            "started",
-                            m.getCreatedAt()!=null
-                            ?
-                            m.getCreatedAt()
-                            .format(formatter)
-                            :
-                            "Not Available"
-                    );
-
-
-
-                    data.put(
-                            "duration",
-                            calculateDuration(
-                                    m.getCreatedAt(),
-                                    m.getEndedAt()
-                            )
-                    );
-
-
-
-                    String status =
-                            m.getStatus();
-
-
-
-                    if("ACTIVE"
-                            .equalsIgnoreCase(status)) {
+                if ("ACTIVE".equalsIgnoreCase(status)) {
 
                         status = "LIVE";
 
-                    }
-                    else if("ENDED"
-                            .equalsIgnoreCase(status)) {
+                } else if ("ENDED"
+                                .equalsIgnoreCase(status)) {
 
                         status = "COMPLETED";
-                    }
+                }
 
+                data.put(
+                                "status",
+                                status);
 
+                data.put(
+                                "createdAt",
+                                meeting.getCreatedAt());
 
-                    data.put(
-                            "status",
-                            status
-                    );
+                data.put(
+                                "endedAt",
+                                meeting.getEndedAt());
 
+                data.put(
+                                "duration",
+                                calculateDuration(
+                                                meeting.getCreatedAt(),
+                                                meeting.getEndedAt()));
 
+                data.put(
+                                "recordingUrl",
+                                meeting.getRecordingUrl());
 
-                    String recordingStatus;
+                data.put(
+                                "pdfUrl",
+                                meeting.getPdfUrl());
 
+                data.put(
+                                "pptUrl",
+                                meeting.getPptUrl());
 
-                    if(m.getRecordingUrl()!=null
-                    &&
-                    !m.getRecordingUrl()
-                            .isEmpty()) {
+                data.put(
+                                "notesUrl",
+                                meeting.getNotesUrl());
 
+                return Map.of(
+                                "success",
+                                true,
 
-                        recordingStatus =
-                                "AVAILABLE";
+                                "meeting",
+                                data);
 
-                    }
-                    else if(
-                            "ENDED"
-                            .equalsIgnoreCase(
-                                    m.getStatus())
-                    ) {
+        }
+        // ==============================
+        // DOWNLOAD PDF
+        // ==============================
 
-                        recordingStatus =
-                                "PROCESSING";
+        @GetMapping("/meetings/{meetingId}/pdf/download")
+        public ResponseEntity<?> downloadPdf(
+                        @PathVariable String meetingId) {
 
-                    }
-                    else {
+                Meeting meeting = meetingRepository.findByMeetingId(meetingId);
 
-                        recordingStatus =
-                                "NOT_STARTED";
-                    }
+                if (meeting == null) {
 
+                        return ResponseEntity.notFound().build();
+                }
 
+                if (meeting.getPdfUrl() == null ||
+                                meeting.getPdfUrl().isEmpty()) {
 
-                    data.put(
-                            "recording",
-                            recordingStatus
-                    );
+                        return ResponseEntity.notFound().build();
+                }
 
+                RestTemplate restTemplate = new RestTemplate();
 
+                byte[] pdfFile = restTemplate.getForObject(
+                                meeting.getPdfUrl(),
+                                byte[].class);
 
-                    data.put(
-                            "summary",
-                            "NOT_AVAILABLE"
-                    );
+                return ResponseEntity.ok()
+                                .header(
+                                                HttpHeaders.CONTENT_DISPOSITION,
+                                                "attachment; filename=\"meeting.pdf\"")
+                                .contentType(
+                                                MediaType.APPLICATION_PDF)
+                                .body(pdfFile);
 
-
-
-                    return data;
-
-
-                })
-                .collect(Collectors.toList());
-
-
-
-        return Map.of(
-
-                "success",
-                true,
-
-
-                "cards",
-                Map.of(
-                        "totalMeetings",
-                        totalMeetings,
-
-                        "liveMeetings",
-                        liveMeetings,
-
-                        "completedMeetings",
-                        completedMeetings,
-
-                        "todayMeetings",
-                        todayMeetings
-                ),
-
-
-                "meetings",
-                meetingList
-
-        );
-
-    }
-
-
-// ==============================
-// GET SINGLE MEETING DETAILS
-// ==============================
-
-@GetMapping("/meetings/{meetingId}")
-public Map<String,Object> getMeetingDetails(
-        @PathVariable String meetingId) {
-
-
-    Meeting meeting =
-            meetingRepository
-                    .findByMeetingId(meetingId);
-
-
-    if(meeting == null) {
-
-        return Map.of(
-                "success",
-                false,
-                "message",
-                "Meeting not found"
-        );
-    }
-
-
-
-    Map<String,Object> data =
-            new HashMap<>();
-
-
-    data.put(
-            "meetingId",
-            meeting.getMeetingId()
-    );
-
-
-    data.put(
-            "meetingName",
-            meeting.getMeetingName()
-    );
-
-
-    data.put(
-            "hostEmail",
-            meeting.getHostEmail()
-    );
-
-
-    data.put(
-            "roomCode",
-            meeting.getRoomCode()
-    );
-
-
-
-    int participants = 0;
-
-
-    List<String> participantList =
-            new ArrayList<>();
-
-
-    if(meeting.getParticipantEmails()!=null
-            &&
-       !meeting.getParticipantEmails()
-               .trim()
-               .isEmpty()) {
-
-
-        participantList =
-                Arrays.stream(
-                    meeting.getParticipantEmails()
-                    .split(",")
-                )
-                .map(String::trim)
-                .filter(e -> !e.isEmpty())
-                .collect(Collectors.toList());
-
-
-        participants =
-                participantList.size();
-    }
-
-
-
-    data.put(
-            "participants",
-            participants
-    );
-
-
-    data.put(
-            "participantEmails",
-            participantList
-    );
-
-
-
-    String status =
-            meeting.getStatus();
-
-
-    if("ACTIVE".equalsIgnoreCase(status)) {
-
-        status = "LIVE";
-
-    } else if("ENDED"
-            .equalsIgnoreCase(status)) {
-
-        status = "COMPLETED";
-    }
-
-
-
-    data.put(
-            "status",
-            status
-    );
-
-
-
-    data.put(
-            "createdAt",
-            meeting.getCreatedAt()
-    );
-
-
-    data.put(
-            "endedAt",
-            meeting.getEndedAt()
-    );
-
-
-
-    data.put(
-            "duration",
-            calculateDuration(
-                    meeting.getCreatedAt(),
-                    meeting.getEndedAt()
-            )
-    );
-
-
-
-    data.put(
-            "recordingUrl",
-            meeting.getRecordingUrl()
-    );
-
-
-    data.put(
-            "pdfUrl",
-            meeting.getPdfUrl()
-    );
-
-
-    data.put(
-            "pptUrl",
-            meeting.getPptUrl()
-    );
-
-
-    data.put(
-            "notesUrl",
-            meeting.getNotesUrl()
-    );
-
-
-
-    return Map.of(
-            "success",
-            true,
-
-            "meeting",
-            data
-    );
-
+        }
 }
-  }
