@@ -33,7 +33,7 @@ public class GoogleCloudStorageService {
                                 blobInfo,
                                 1,
                                 TimeUnit.HOURS,
-                                Storage.SignUrlOption.withV4Signature(),
+                                Storage.SignUrlOption.withV4Signature(), 
                                 Storage.SignUrlOption.withExtHeaders(
                                                 Map.of(
                                                                 "Content-Disposition",
