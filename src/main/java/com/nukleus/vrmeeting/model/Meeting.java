@@ -42,6 +42,9 @@ public class Meeting {
     @Column(name = "pdf_url", length = 2000)
     private String pdfUrl;
 
+    @Column(name = "pdf_file_name")
+    private String pdfFileName;
+
     @Column(name = "notes_url", length = 2000)
     private String notesUrl;
 
@@ -145,6 +148,14 @@ public class Meeting {
 
     public void setPdfUrl(String pdfUrl) {
         this.pdfUrl = pdfUrl;
+    }
+
+    public String getPdfFileName() {
+        return pdfFileName;
+    }
+
+    public void setPdfFileName(String pdfFileName) {
+        this.pdfFileName = pdfFileName;
     }
 
     public String getNotesUrl() {

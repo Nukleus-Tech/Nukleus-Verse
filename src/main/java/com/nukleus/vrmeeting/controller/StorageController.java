@@ -67,7 +67,7 @@ public class StorageController {
                             meeting.setRecordingUrl(url);
 
                             meeting.setRecordingFileName(
-                                    file.getOriginalFilename());
+                                  (String) response.get("fileName"));
 
                             double sizeMB = file.getSize()
                                     /
@@ -86,6 +86,9 @@ public class StorageController {
                         case "pdf":
 
                             meeting.setPdfUrl(url);
+
+                            meeting.setPdfFileName(
+                                    (String) response.get("fileName"));
                             break;
 
                         case "notes":
@@ -147,7 +150,8 @@ public class StorageController {
                     "success", true,
                     "message", successMessage,
                     "url", publicUrl,
-                    "fileUrl", publicUrl);
+                    "fileUrl", publicUrl,
+                    "fileName", fileName);
 
         } catch (Exception e) {
             return Map.of("success", false, "message", e.getMessage());
