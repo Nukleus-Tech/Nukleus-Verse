@@ -1,57 +1,57 @@
-// package com.nukleus.vrmeeting.service;
+package com.nukleus.vrmeeting.service;
 
 
-// import com.google.cloud.storage.BlobInfo;
-// import com.google.cloud.storage.Storage;
-// import org.springframework.beans.factory.annotation.Value;
-// import org.springframework.stereotype.Service;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
-// import java.net.URL;
-// import java.util.concurrent.TimeUnit;
-
-
-// @Service
-// public class GoogleCloudStorageService {
+import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 
-//     @Value("${gcp.bucket-name}")
-//     private String bucketName;
+@Service
+public class GoogleCloudStorageService {
 
 
-//     private final Storage storage;
+    @Value("${gcp.bucket-name}")
+    private String bucketName;
 
 
-//     public GoogleCloudStorageService(Storage storage) {
-
-//         this.storage = storage;
-
-//     }
+    private final Storage storage;
 
 
+    public GoogleCloudStorageService(Storage storage) {
 
-//     public String generateDownloadUrl(String fileName) {
+        this.storage = storage;
 
-
-//         BlobInfo blobInfo =
-//                 BlobInfo.newBuilder(
-//                         bucketName,
-//                         fileName
-//                 )
-//                 .build();
+    }
 
 
 
-//         URL url =
-//                 storage.signUrl(
-//                         blobInfo,
-//                         1,
-//                         TimeUnit.HOURS,
-//                         Storage.SignUrlOption.withV4Signature()
-//                 );
+    public String generateDownloadUrl(String fileName) {
 
 
-//         return url.toString();
+        BlobInfo blobInfo =
+                BlobInfo.newBuilder(
+                        bucketName,
+                        fileName
+                )
+                .build();
 
-//     }
 
-// }
+
+        URL url =
+                storage.signUrl(
+                        blobInfo,
+                        1,
+                        TimeUnit.HOURS,
+                        Storage.SignUrlOption.withV4Signature()
+                );
+
+
+        return url.toString();
+
+    }
+
+}
