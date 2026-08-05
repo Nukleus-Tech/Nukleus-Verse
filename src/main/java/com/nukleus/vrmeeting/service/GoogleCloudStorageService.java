@@ -12,32 +12,32 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class GoogleCloudStorageService {
 
-        @Value("${gcp.bucket-name}")
-        private String bucketName;
+    @Value("${gcp.bucket-name}")
+    private String bucketName;
 
-        private final Storage storage;
+    private final Storage storage;
 
-        public GoogleCloudStorageService(Storage storage) {
-                this.storage = storage;
-        }
+    public GoogleCloudStorageService(Storage storage) {
+        this.storage = storage;
+    }
 
-        public String generateDownloadUrl(
-                        String objectName,
-                        String fileName) {
-                BlobInfo blobInfo = BlobInfo.newBuilder(
-                                bucketName,
-                                objectName).build();
 
-                URL signedUrl = storage.signUrl(
-                                blobInfo,
-                                15,
-                                TimeUnit.MINUTES,
-                                Storage.SignUrlOption.withV4Signature(),
-                                Storage.SignUrlOption.withQueryParams(
-                                                Map.of(
-                                                                "response-content-disposition",
-                                                                "attachment; filename=\"" + fileName + "\"")));
+    public String generateDownloadUrl(String fileName) {
 
-                return signedUrl.toString();
-        }
+        BlobInfo blobInfo = BlobInfo.newBuilder(
+                bucketName,
+                fileName
+        ).build();
+
+
+        URL url = storage.signUrl(
+                blobInfo,
+                1,
+                TimeUnit.HOURS,
+                Storage.SignUrlOption.withV4Signature()
+        );
+
+
+        return url.toString();
+    }
 }
