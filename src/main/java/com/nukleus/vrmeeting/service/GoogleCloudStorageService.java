@@ -18,31 +18,26 @@ public class GoogleCloudStorageService {
         private final Storage storage;
 
         public GoogleCloudStorageService(Storage storage) {
-
                 this.storage = storage;
-
         }
 
-        public String generateDownloadUrl(String fileName) {
-
+        public String generateDownloadUrl(
+                        String objectName,
+                        String fileName) {
                 BlobInfo blobInfo = BlobInfo.newBuilder(
                                 bucketName,
-                                fileName).build();
+                                objectName).build();
 
-                URL url = storage.signUrl(
+                URL signedUrl = storage.signUrl(
                                 blobInfo,
-                                1,
-                                TimeUnit.HOURS,
-                                Storage.SignUrlOption.withV4Signature(), 
-                                Storage.SignUrlOption.withExtHeaders(
+                                15,
+                                TimeUnit.MINUTES,
+                                Storage.SignUrlOption.withV4Signature(),
+                                Storage.SignUrlOption.withQueryParams(
                                                 Map.of(
-                                                                "Content-Disposition",
-                                                                "attachment; filename=\"" +
-                                                                                fileName.substring(fileName
-                                                                                                .lastIndexOf("/") + 1)
-                                                                                + "\"")));
+                                                                "response-content-disposition",
+                                                                "attachment; filename=\"" + fileName + "\"")));
 
-                return url.toString();
+                return signedUrl.toString();
         }
-
 }
