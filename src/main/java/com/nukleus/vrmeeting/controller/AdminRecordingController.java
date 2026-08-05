@@ -2,6 +2,7 @@ package com.nukleus.vrmeeting.controller;
 
 import com.nukleus.vrmeeting.model.Meeting;
 import com.nukleus.vrmeeting.repository.MeetingRepository;
+import com.nukleus.vrmeeting.service.GoogleCloudStorageService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,8 @@ public class AdminRecordingController {
 
     @Autowired
     private MeetingRepository meetingRepository;
+    @Autowired
+private GoogleCloudStorageService storageService;
 
 
 
@@ -221,9 +224,9 @@ public Map<String,Object> downloadRecording(
     }
 
 
-    if(meeting.getRecordingUrl()==null
+    if(meeting.getRecordingFileName()==null
             ||
-       meeting.getRecordingUrl().isEmpty()){
+       meeting.getRecordingFileName().isEmpty()){
 
 
         return Map.of(
@@ -235,6 +238,11 @@ public Map<String,Object> downloadRecording(
     }
 
 
+    String signedUrl =
+            storageService.generateDownloadUrl(
+                    meeting.getRecordingFileName()
+            );
+
 
     return Map.of(
 
@@ -242,14 +250,10 @@ public Map<String,Object> downloadRecording(
             true,
 
             "fileName",
-            meeting.getRecordingFileName()!=null
-            ?
-            meeting.getRecordingFileName()
-            :
-            "recording.mp4",
+            meeting.getRecordingFileName(),
 
             "downloadUrl",
-            meeting.getRecordingUrl()
+            signedUrl
 
     );
 
