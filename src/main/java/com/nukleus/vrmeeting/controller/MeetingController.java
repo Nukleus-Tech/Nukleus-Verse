@@ -41,14 +41,50 @@ public class MeetingController {
         String hostEmail = request.getHostEmail().trim().toLowerCase();
 
         if (!roomCode.matches("^[0-9]{3,8}$")) {
-            return Map.of("success", false, "message", "Room code must be 3 to 8 digits only");
+            return Map.of(
+                    "success",
+                    false,
+                    "message",
+                    "Room code must be 3 to 8 digits only");
         }
 
         User hostUser = userRepository.findByEmailIgnoreCase(hostEmail);
 
         if (hostUser == null) {
-            return Map.of("success", false, "message", "Host user not found");
+            return Map.of(
+                    "success",
+                    false,
+                    "message",
+                    "Host user not found");
         }
+
+        // -------------------------------------------------
+        // 1. CHECK ROOM CODE
+        // -------------------------------------------------
+
+        Meeting activeMeeting = meetingRepository.findByRoomCodeAndStatus(
+                roomCode,
+                "ACTIVE");
+
+        /*
+         * If room is already ACTIVE and belongs to
+         * another host, reject the new meeting.
+         *
+         * If it belongs to the SAME host, allow it.
+         */
+        if (activeMeeting != null
+                && !activeMeeting.getHostEmail().equalsIgnoreCase(hostEmail)) {
+
+            return Map.of(
+                    "success",
+                    false,
+                    "message",
+                    "This room code is already in use");
+        }
+
+        // -------------------------------------------------
+        // 2. END PREVIOUS ACTIVE MEETING OF SAME HOST
+        // -------------------------------------------------
 
         Optional<Meeting> oldMeeting = meetingRepository
                 .findFirstByHostEmailIgnoreCaseAndStatusOrderByCreatedAtDesc(
@@ -62,7 +98,8 @@ public class MeetingController {
             old.setStatus("ENDED");
 
             old.setEndedAt(
-                    LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
+                    LocalDateTime.now(
+                            ZoneId.of("Asia/Kolkata")));
 
             meetingRepository.save(old);
 
@@ -73,44 +110,77 @@ public class MeetingController {
                             + old.getMeetingId());
         }
 
-        Meeting activeMeeting = meetingRepository.findByRoomCodeAndStatus(roomCode, "ACTIVE");
+        // -------------------------------------------------
+        // 3. CREATE NEW MEETING
+        // -------------------------------------------------
 
-        if (activeMeeting != null) {
-            return Map.of("success", false, "message", "This room code is already in use");
-        }
-
-        // create new meeting
         Meeting meeting = new Meeting();
+
         meeting.setMeetingId(UUID.randomUUID().toString());
+
         meeting.setRoomCode(roomCode);
+
         meeting.setHostEmail(hostEmail);
 
-        if (request.getMeetingName() != null && !request.getMeetingName().trim().isEmpty()) {
-            meeting.setMeetingName(request.getMeetingName().trim());
+        if (request.getMeetingName() != null
+                && !request.getMeetingName().trim().isEmpty()) {
+
+            meeting.setMeetingName(
+                    request.getMeetingName().trim());
         }
 
         meeting.setStatus("ACTIVE");
+
         meeting.setRecordingStatus("NOT_STARTED");
+
         meeting.setCreatedAt(
-                LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
+                LocalDateTime.now(
+                        ZoneId.of("Asia/Kolkata")));
 
-        // meetingRepository.save(meeting);
-
-        // hostUser.setCurrentMeetingId(meeting.getMeetingId());
-        // userRepository.save(hostUser);
         Meeting savedMeeting = meetingRepository.save(meeting);
 
-        hostUser.setCurrentMeetingId(savedMeeting.getMeetingId());
+        // -------------------------------------------------
+        // 4. UPDATE HOST CURRENT MEETING
+        // -------------------------------------------------
+
+        hostUser.setCurrentMeetingId(
+                savedMeeting.getMeetingId());
+
         userRepository.save(hostUser);
 
+        // -------------------------------------------------
+        // 5. RESPONSE
+        // -------------------------------------------------
+
         Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("message", "Meeting created successfully");
-        response.put("meetingId", meeting.getMeetingId());
-        response.put("roomCode", meeting.getRoomCode());
-        response.put("hostEmail", meeting.getHostEmail());
-        response.put("meetingName", meeting.getMeetingName());
-        response.put("status", meeting.getStatus());
+
+        response.put(
+                "success",
+                true);
+
+        response.put(
+                "message",
+                "Meeting created successfully");
+
+        response.put(
+                "meetingId",
+                meeting.getMeetingId());
+
+        response.put(
+                "roomCode",
+                meeting.getRoomCode());
+
+        response.put(
+                "hostEmail",
+                meeting.getHostEmail());
+
+        response.put(
+                "meetingName",
+                meeting.getMeetingName());
+
+        response.put(
+                "status",
+                meeting.getStatus());
 
         return response;
     }
