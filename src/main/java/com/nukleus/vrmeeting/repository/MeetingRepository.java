@@ -3,7 +3,9 @@ package com.nukleus.vrmeeting.repository;
 import com.nukleus.vrmeeting.model.Meeting;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+
 import java.util.List;
+import java.util.Optional;
 
 public interface MeetingRepository extends JpaRepository<Meeting, Long> {
 
@@ -15,7 +17,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
 
     List<Meeting> findByHostEmailIgnoreCase(String hostEmail);
 
-    Meeting findByHostEmailIgnoreCaseAndStatus(
+    Optional<Meeting> findFirstByHostEmailIgnoreCaseAndStatusOrderByCreatedAtDesc(
             String hostEmail,
             String status
     );

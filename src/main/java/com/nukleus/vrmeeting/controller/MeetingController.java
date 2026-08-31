@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.time.ZoneId;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/meeting")
@@ -44,35 +45,33 @@ public class MeetingController {
         }
 
         User hostUser = userRepository.findByEmailIgnoreCase(hostEmail);
-        
 
         if (hostUser == null) {
             return Map.of("success", false, "message", "Host user not found");
         }
 
+        Optional<Meeting> oldMeeting = meetingRepository
+                .findFirstByHostEmailIgnoreCaseAndStatusOrderByCreatedAtDesc(
+                        hostEmail,
+                        "ACTIVE");
 
+        if (oldMeeting.isPresent()) {
 
-        Meeting oldMeeting = meetingRepository.findByHostEmailIgnoreCaseAndStatus(
-                hostEmail,
-                "ACTIVE");
+            Meeting old = oldMeeting.get();
 
-        if (oldMeeting != null) {
+            old.setStatus("ENDED");
 
-            oldMeeting.setStatus("ENDED");
-            oldMeeting.setEndedAt(LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
+            old.setEndedAt(
+                    LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
 
-            meetingRepository.save(oldMeeting);
+            meetingRepository.save(old);
 
             System.out.println(
-                    "Old meeting ended: "
-                            + oldMeeting.getMeetingId());
+                    "Previous meeting ended for host: "
+                            + hostEmail
+                            + " | Meeting: "
+                            + old.getMeetingId());
         }
-         
-   
-        
-        
-
-        
 
         Meeting activeMeeting = meetingRepository.findByRoomCodeAndStatus(roomCode, "ACTIVE");
 
@@ -80,8 +79,7 @@ public class MeetingController {
             return Map.of("success", false, "message", "This room code is already in use");
         }
 
-
-           //create new meeting
+        // create new meeting
         Meeting meeting = new Meeting();
         meeting.setMeetingId(UUID.randomUUID().toString());
         meeting.setRoomCode(roomCode);
