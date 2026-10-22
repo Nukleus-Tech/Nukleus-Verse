@@ -33,12 +33,21 @@ public class AccountDeletionProcessor {
     public void runBatch() {
         if (!properties.isSchedulerEnabled() || !properties.isDestructiveEnabled()) return;
         try {
-            safety.requireRequestProtection();
-            for (long id : repository.findDueIds(clock.instant(), properties.getMaxAttempts(),
-                    PageRequest.of(0, properties.getBatchSize()))) process(id);
+            runDue(properties.getBatchSize());
         } catch (Exception e) {
             LOG.warn("Account deletion batch unavailable: {}", e.getClass().getSimpleName());
         }
+    }
+    /** One due account per authenticated HTTP tick; selection errors propagate for scheduler retry. */
+    public void runScheduledBatch() {
+        if (!properties.isSchedulerEnabled() || !properties.isDestructiveEnabled())
+            throw AccountDeletionException.integration();
+        runDue(1);
+    }
+    private void runDue(int limit) {
+        safety.requireRequestProtection();
+        for (long id : repository.findDueIds(clock.instant(), properties.getMaxAttempts(),
+                PageRequest.of(0, limit))) process(id);
     }
     void process(long id) {
         AccountDeletionWorkStore.Claim claim = null;

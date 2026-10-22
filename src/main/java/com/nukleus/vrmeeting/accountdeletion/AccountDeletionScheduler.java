@@ -9,12 +9,15 @@ import java.util.concurrent.*;
 public class AccountDeletionScheduler implements SmartLifecycle {
     private final AccountDeletionProperties properties;
     private final AccountDeletionProcessor processor;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private AccountDeletionTriggerProperties trigger;
     private ScheduledExecutorService executor;
     public AccountDeletionScheduler(AccountDeletionProperties properties, AccountDeletionProcessor processor) {
         this.properties = properties; this.processor = processor;
     }
     @Override public boolean isAutoStartup() {
-        return properties.isSchedulerEnabled() && properties.isDestructiveEnabled();
+        return properties.isSchedulerEnabled() && properties.isDestructiveEnabled() &&
+            (trigger == null || !trigger.isEnabled());
     }
     @Override public synchronized void start() {
         if (!isAutoStartup() || isRunning()) return;

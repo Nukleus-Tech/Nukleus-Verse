@@ -1,0 +1,135 @@
+{
+  "title": "Automatic account deletion backend readiness",
+  "date": "2026-10-22",
+  "status": "LOCAL_SCHEDULED_TRIGGER_TESTED_PRODUCTION_ACTIVATION_BLOCKED",
+  "requestedBehavior": "An authenticated deletion request sets a 168-hour deadline. If not cancelled before expiry, scheduled execution processes the eligible request without requiring another user login.",
+  "implementedNow": {
+    "route": "POST /internal/account-deletion/run",
+    "body": "Empty; any body or query is rejected. No userId, requestId, date or force parameter.",
+    "authentication": "Google-signed ID token in Authorization: Bearer. Pinned audience, numeric service-account sub and verified service-account email; signature, issuer, expiry and issued-at checked. Admin JWTs and user sessions cannot authorize the trigger.",
+    "execution": "Synchronous HTTP work, not a background task after responding. Uses the existing due-only worker, locks, immutable cleanup plans, storage generations, provider receipts and bounded retries.",
+    "batch": "At most one eligible account per scheduled invocation. With a one-minute schedule, eligible accounts start on a later tick, subject to backlog, lock contention, safety holds and provider retries; exact wall-clock completion is not guaranteed.",
+    "response": "204 acknowledges a cycle, including empty/contended cycles. It does not mean every due account completed. Per-account FAILED/COMPLETED status and last_error remain authoritative. Selection/readiness errors produce 503.",
+    "timer": "When trigger.enabled=true, the in-process timer does not auto-start. Workers remain default-off.",
+    "schema": "No new database migration or existing-table change is needed for this patch."
+  },
+  "modifiedExistingFiles": [
+    "src/main/java/com/nukleus/vrmeeting/accountdeletion/AccountDeletionProcessor.java",
+    "src/main/java/com/nukleus/vrmeeting/accountdeletion/AccountDeletionScheduler.java",
+    "src/main/java/com/nukleus/vrmeeting/accountdeletion/phase3/IntegrationRoutes.java"
+  ],
+  "newFiles": [
+    "src/main/java/com/nukleus/vrmeeting/accountdeletion/AccountDeletionScheduledTrigger.java",
+    "src/main/java/com/nukleus/vrmeeting/accountdeletion/AccountDeletionTriggerConfiguration.java",
+    "src/main/java/com/nukleus/vrmeeting/accountdeletion/AccountDeletionTriggerIdentity.java",
+    "src/main/java/com/nukleus/vrmeeting/accountdeletion/AccountDeletionTriggerProperties.java",
+    "src/test/java/com/nukleus/vrmeeting/accountdeletion/AccountDeletionScheduledTriggerTest.java",
+    "src/test/java/com/nukleus/vrmeeting/accountdeletion/AccountDeletionScheduledIntegrationTest.java",
+    "docs/account-deletion/AUTOMATIC-DELETION-READINESS.json"
+  ],
+  "sourceEvidence": [
+    {
+      "file": "src/main/java/com/nukleus/vrmeeting/controller/StorageController.java",
+      "finding": "Legacy uploadToGcs and legacy archiveRemoteFile use random images/ keys without end-user owner metadata or durable per-user upload history."
+    },
+    {
+      "file": "src/main/java/com/nukleus/vrmeeting/controller/AvatarController.java",
+      "finding": "meshyTaskId is copied from the client payload. No trusted server-side Meshy task creation is implemented here."
+    },
+    {
+      "file": "src/main/java/com/nukleus/vrmeeting/accountdeletion/phase3/OwnedUploadRegistry.java",
+      "finding": "New integration-enabled uploads already reserve server-owned user keys and exact generations. This does not retroactively prove ownership of old images/ objects."
+    },
+    {
+      "file": "src/main/java/com/nukleus/vrmeeting/accountdeletion/phase3/CleanupInventoryStore.java",
+      "finding": "Coverage and historical Meshy task evidence require trusted review/import. No real evidence was invented or imported."
+    }
+  ],
+  "readOnlyDatabaseFindings": {
+    "databaseReadOnly": true,
+    "userIdentifiersRetrieved": false,
+    "productionRecordsChanged": false,
+    "usersWithPhotoReference": 5,
+    "usersWithMeshyTaskReference": 5,
+    "usersWithGoogleReference": 0,
+    "legacyImagesReferences": 24,
+    "otherReferences": 5,
+    "additionalHistoricalUploadOrTaskTablesFound": false,
+    "reviewedCoverageRows": 0,
+    "approvedCleanupPlans": 0,
+    "ownedObjectRows": 0,
+    "legacyProofRows": 0,
+    "providerTaskProofRows": 0,
+    "existingUserForeignKeys": "Only known deletion-module FKs were found. users/accountStatus and meeting data were not modified."
+  },
+  "activationBlockers": [
+    "Legacy images/ ownership and historical Meshy task provenance are not in this backend database; do not infer exclusive ownership from a User URL or client task ID.",
+    "The configured backend Meshy credential, allowed cleanup bucket, provider-call approval and shared-meeting/retention policy are still required. Do not copy a Unity-embedded key into logs/source.",
+    "All six cleanup review domains, including historical/unlinked objects, provider grants and retained shared data, must be covered. Newly instrumented uploads alone do not establish complete historical coverage.",
+    "ACTIVE hosted meetings require an approved resolution; shared recordings/files remain protected.",
+    "The new source must be deployed after readiness is established. No Cloud Scheduler job, dedicated service-account identity or IAM binding was created here.",
+    "Cloud Run is currently minScale=0 and cpu-throttling=true. The old idle timer is unreliable there. A properly configured authenticated Cloud Scheduler HTTP target is required to use this patch.",
+    "Load/failover, real provider permissions, per-account HTTP execution duration, retry exhaustion alerts and backup/retention handling must be verified before unattended destructive activation."
+  ],
+  "futureDeployment": {
+    "warning": "Instructions only. These are NOT the currently active settings and were NOT applied.",
+    "prerequisites": "Reconcile trusted evidence and policy first; keep request status/cancellation and integration available. Do not disable integration or backdate requests.",
+    "configurationAfterApproval": {
+      "NUKLEUS_ACCOUNTDELETION_TRIGGER_ENABLED": "true",
+      "NUKLEUS_ACCOUNTDELETION_TRIGGER_AUDIENCE": "Exact deployed Cloud Run service URL, matching the scheduler OIDC audience",
+      "NUKLEUS_ACCOUNTDELETION_TRIGGER_SERVICEACCOUNTSUBJECT": "Dedicated scheduler service account numeric uniqueId; not a user ID",
+      "NUKLEUS_ACCOUNTDELETION_TRIGGER_SERVICEACCOUNTEMAIL": "Dedicated scheduler service account email",
+      "NUKLEUS_ACCOUNTDELETION_SCHEDULERENABLED": "true",
+      "NUKLEUS_ACCOUNTDELETION_DESTRUCTIVEENABLED": "true",
+      "NUKLEUS_ACCOUNTDELETION_GRACEPERIOD": "168h",
+      "NUKLEUS_ACCOUNTDELETION_CLEANUP_AUTOMATICPREPARATIONENABLED": "true only after inventory coverage is reviewed",
+      "NUKLEUS_ACCOUNTDELETION_CLEANUP_PROVIDERCALLSENABLED": "true only after provider permissions and ownership are verified",
+      "NUKLEUS_ACCOUNTDELETION_CLEANUP_ANONYMIZEMEETINGREFERENCES": "true only after structured-reference retention policy is approved",
+      "NUKLEUS_ACCOUNTDELETION_ALLOWEDBUCKETS": "nukleus-verse-storage only after reviewing storage policy",
+      "NUKLEUS_ACCOUNTDELETION_CLEANUP_MESHYAPIKEY": "Secret Manager reference to the correct Meshy application credential, never plaintext in this file"
+    },
+    "job": {
+      "method": "POST",
+      "path": "/internal/account-deletion/run",
+      "frequency": "Every minute, UTC",
+      "body": "Empty",
+      "identity": "Dedicated service-account OIDC token, same exact audience and pinned sub/email as backend configuration",
+      "retry": "Bounded scheduler retries for 503 plus recurring ticks. Per-account retries stay governed by the existing 5-attempt policy.",
+      "safety": "Do not force-run against real accounts, alter stored deadlines, lower the grace period, or provide user IDs. Verify safe request duration within Cloud Run and Scheduler timeouts before activation."
+    },
+    "monitor": "Alert on due request backlog, FAILED, retry exhaustion, prolonged PROCESSING, 401/503 trigger responses, and excessive request duration. A 204 alone is not a completion audit.",
+    "officialReferences": [
+      "https://docs.cloud.google.com/run/docs/triggering/using-scheduler",
+      "https://docs.cloud.google.com/scheduler/docs/http-target-auth",
+      "https://docs.cloud.google.com/run/docs/configuring/billing-settings"
+    ]
+  },
+  "tests": {
+    "status": "BUILD_SUCCESS",
+    "completedAt": "2026-10-22T16:36:10+05:30",
+    "tests": 165,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "newScheduledTriggerTests": 17,
+    "existingRegressionTests": 148,
+    "mainJavaFilesCompiled": 87,
+    "testJavaFilesCompiled": 17,
+    "javaRelease": 21,
+    "syntheticPostgresStoppedAfterRun": true,
+    "scope": "Isolated loopback PostgreSQL 17, synthetic accounts, MockMvc and locally signed RSA tokens, mocked Storage/Meshy/Google. No Spring Boot production server launched.",
+    "reportDirectory": "C:/Users/Rushil/.codex/visualizations/2026/10/07/01a114d9-c5f0-7d02-a03e-bb569f983d6c/automatic-deletion-20261022-a20a8988137d4efe9a8332f2f288b5f7/verify/target/surefire-reports"
+  },
+  "checkpoint": "C:/Users/Rushil/.codex/visualizations/2026/10/07/01a114d9-c5f0-7d02-a03e-bb569f983d6c/automatic-deletion-20261022-a20a8988137d4efe9a8332f2f288b5f7/before",
+  "safety": {
+    "unityChanged": false,
+    "productionDeploymentPerformed": false,
+    "cloudConfigurationChanged": false,
+    "billingChanged": false,
+    "productionMigrationRun": false,
+    "realAccountDeletionPerformed": false,
+    "realStorageDeletionPerformed": false,
+    "realDeadlineChanged": false,
+    "cleanupSafetyBypassed": false
+  }
+}

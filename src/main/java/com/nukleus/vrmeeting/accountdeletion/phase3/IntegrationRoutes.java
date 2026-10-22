@@ -35,6 +35,13 @@ public final class IntegrationRoutes {
         if (path == null || path.isEmpty()) path = request.getRequestURI().substring(request.getContextPath().length());
         boolean account = path.equals("/api/account") || path.startsWith("/api/account/");
         try {
+            if (path.equals(AccountDeletionScheduledTrigger.PATH)) {
+                // Dedicated machine authentication happens in the endpoint. Do NOT acquire the
+                // shared ingress fence: the existing worker takes its own exclusive fence.
+                // This is never an admin/user identity or a bypass for any other route.
+                chain.doFilter(request, response);
+                return;
+            }
             if (!properties.isEnabled()) {
                 if (account || path.equals("/api/auth/google") || path.equals("/api/auth/google-challenge"))
                     throw new AccountDeletionException(HttpStatus.SERVICE_UNAVAILABLE, "ACCOUNT_DELETION_DISABLED");
