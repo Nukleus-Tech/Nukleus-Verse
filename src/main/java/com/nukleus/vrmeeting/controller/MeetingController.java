@@ -26,8 +26,14 @@ public class MeetingController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private com.nukleus.vrmeeting.accountdeletion.phase3.AuthenticatedRouteGuard deletionGuard;
+
     @PostMapping("/create")
     public Map<String, Object> createMeeting(@RequestBody Meeting request) {
+
+        deletionGuard.requireOwnEmail(request.getHostEmail());
+        deletionGuard.validateMeetingFiles(request);
 
         if (request.getRoomCode() == null || request.getRoomCode().trim().isEmpty()) {
             return Map.of("success", false, "message", "Room code is required");
@@ -128,6 +134,15 @@ public class MeetingController {
             meeting.setMeetingName(
                     request.getMeetingName().trim());
         }
+        // Set meetingRoomName if provided
+        
+
+        if (request.getMeetingRoomName() != null
+                && !request.getMeetingRoomName().trim().isEmpty()) {
+
+            meeting.setMeetingRoomName(
+                    request.getMeetingRoomName().trim());
+        }
 
         meeting.setStatus("ACTIVE");
 
@@ -179,6 +194,10 @@ public class MeetingController {
                 meeting.getMeetingName());
 
         response.put(
+                "meetingRoomName",
+                meeting.getMeetingRoomName());
+
+        response.put(
                 "status",
                 meeting.getStatus());
 
@@ -187,6 +206,8 @@ public class MeetingController {
 
     @PostMapping("/join")
     public Map<String, Object> joinMeeting(@RequestBody Map<String, String> request) {
+
+        deletionGuard.requireOwnEmail(request.get("userEmail"));
 
         String roomCode = request.get("roomCode");
         String userEmail = request.get("userEmail");
@@ -248,6 +269,9 @@ public class MeetingController {
 
     @PostMapping("/end")
     public Map<String, Object> endMeeting(@RequestBody Meeting request) {
+
+        deletionGuard.requireHost(request.getMeetingId());
+        deletionGuard.validateMeetingFiles(request);
 
         if (request.getMeetingId() == null || request.getMeetingId().trim().isEmpty()) {
             return Map.of("success", false, "message", "Meeting ID is required");
@@ -324,6 +348,9 @@ public class MeetingController {
     @PostMapping("/update-files")
     public Map<String, Object> updateMeetingFiles(@RequestBody Meeting request) {
 
+        deletionGuard.requireHost(request.getMeetingId());
+        deletionGuard.validateMeetingFiles(request);
+
         if (request.getMeetingId() == null || request.getMeetingId().trim().isEmpty()) {
             return Map.of("success", false, "message", "Meeting ID is required");
         }
@@ -373,6 +400,8 @@ public class MeetingController {
 
     @PostMapping("/leave")
     public Map<String, Object> leaveMeeting(@RequestBody Map<String, String> request) {
+
+        deletionGuard.requireOwnEmail(request.get("userEmail"));
 
         String userEmail = request.get("userEmail");
 

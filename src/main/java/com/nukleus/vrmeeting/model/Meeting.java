@@ -26,6 +26,10 @@ public class Meeting {
     @Column(name = "meeting_name")
     private String meetingName;
 
+    @Column(name = "meeting_room_name")
+     private String meetingRoomName;
+
+
     @Column(name = "recording_url", length = 2000)
     private String recordingUrl;
 
@@ -105,6 +109,14 @@ public class Meeting {
 
     public void setMeetingName(String meetingName) {
         this.meetingName = meetingName;
+    }
+
+    public String getMeetingRoomName() {
+        return meetingRoomName;
+    }
+
+    public void setMeetingRoomName(String meetingRoomName) {
+        this.meetingRoomName = meetingRoomName;
     }
 
     public String getRecordingUrl() {

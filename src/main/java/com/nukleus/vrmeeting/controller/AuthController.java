@@ -15,6 +15,11 @@ public class AuthController {
 
         @Autowired
         private  UserRepository userRepository;
+
+        @Autowired
+        private com.nukleus.vrmeeting.accountdeletion.phase3.JdbcSessionAuthority deletionSessions;
+        @Autowired
+        private com.nukleus.vrmeeting.accountdeletion.phase3.AuthenticatedRouteGuard deletionGuard;
        
 
         private boolean isValidEmail(String email) {
@@ -24,6 +29,8 @@ public class AuthController {
 
         @PostMapping("/register")
         public Map<String, Object> register(@RequestBody User user) {
+
+                deletionGuard.validateRegistration(user);
 
                 if (user.getName() == null || user.getName().trim().isEmpty()) {
                         return Map.of(
@@ -74,6 +81,9 @@ public class AuthController {
 
 
 
+                if (deletionSessions.enabled()) {
+                        user.setPassword(com.nukleus.vrmeeting.accountdeletion.phase3.PasswordCredentials.encode(user.getPassword()));
+                }
                 userRepository.save(user);
 
                 return Map.of(
@@ -116,6 +126,10 @@ public class AuthController {
 
                 String password = loginUser.getPassword().trim();
 
+                if (deletionSessions.enabled()) {
+                        return deletionSessions.login(email, password);
+                }
+
                 User dbUser = userRepository.findByEmailIgnoreCase(email);
 
                 if (dbUser == null) {
@@ -131,7 +145,7 @@ public class AuthController {
                                         "message", "Account is blocked");
                 }
 
-                if (!dbUser.getPassword().equals(password)) {
+                if (!com.nukleus.vrmeeting.accountdeletion.phase3.PasswordCredentials.matches(password, dbUser.getPassword())) {
 
                         return Map.of(
                                         "success", false,

@@ -18,8 +18,13 @@ public class AvatarController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private com.nukleus.vrmeeting.accountdeletion.phase3.AuthenticatedRouteGuard deletionGuard;
+
     @PostMapping("/save")
     public Map<String, Object> saveAvatar(@RequestBody User avatarData) {
+
+        deletionGuard.validateAvatar(avatarData);
 
         Map<String, Object> response = new HashMap<>();
 
@@ -48,7 +53,9 @@ public class AvatarController {
         }
 
         if (avatarData.getPassword() != null && !avatarData.getPassword().trim().isEmpty()) {
-            user.setPassword(avatarData.getPassword().trim());
+            user.setPassword(deletionGuard.enabled()
+                ? com.nukleus.vrmeeting.accountdeletion.phase3.PasswordCredentials.encode(avatarData.getPassword().trim())
+                : avatarData.getPassword().trim());
         }
 
         user.setImageUrl(avatarData.getImageUrl());

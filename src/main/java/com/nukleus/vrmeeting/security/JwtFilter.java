@@ -22,10 +22,24 @@ public class JwtFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired(required = false)
+    private com.nukleus.vrmeeting.accountdeletion.phase3.IntegrationRoutes deletionIntegration;
+
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
+
+        if (deletionIntegration != null) {
+            deletionIntegration.route(request, response, filterChain,
+                    () -> doLegacyFilter(request, response, filterChain));
+            return;
+        }
+        doLegacyFilter(request, response, filterChain);
+    }
+
+    private void doLegacyFilter(HttpServletRequest request, HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getServletPath();

@@ -2,7 +2,6 @@ package com.nukleus.vrmeeting.controller;
 
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.nukleus.vrmeeting.model.Meeting;
@@ -20,10 +19,17 @@ public class StorageController {
 
     private final String bucketName = "nukleus-verse-storage";
 
-    private final Storage storage = StorageOptions.getDefaultInstance().getService();
+    @Autowired
+    private Storage storage;
+
+    @Autowired
+    private com.nukleus.vrmeeting.accountdeletion.phase3.OwnedUploadRegistry deletionUploads;
+    @Autowired
+    private com.nukleus.vrmeeting.accountdeletion.phase3.AuthenticatedRouteGuard deletionGuard;
 
     @PostMapping("/upload-image")
     public Map<String, Object> uploadImage(@RequestParam("file") MultipartFile file) {
+        if (deletionUploads.enabled()) return deletionUploads.uploadPhoto(bucketName, file);
         return uploadToGcs(file, "images/", "Image uploaded successfully");
     }
 
@@ -32,6 +38,7 @@ public class StorageController {
             @RequestParam("file") MultipartFile file,
             @RequestParam("meetingId") String meetingId,
             @RequestParam("fileType") String fileType) {
+        deletionGuard.requireHost(meetingId);
         try {
             if (meetingId == null || meetingId.trim().isEmpty()) {
                 return Map.of("success", false, "message", "meetingId is required");
@@ -160,6 +167,7 @@ public class StorageController {
 
     @PostMapping("/archive-remote-file")
     public Map<String, Object> archiveRemoteFile(@RequestBody Map<String, String> body) {
+        if (deletionUploads.enabled()) return deletionUploads.archive(bucketName, body);
         try {
             String remoteUrl = body.get("remoteUrl");
             String fileName = body.get("fileName");
